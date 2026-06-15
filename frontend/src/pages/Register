@@ -9,18 +9,18 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
     setLoading(true);
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
-    
+
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -35,7 +35,7 @@ export default function Register() {
       setLoading(false);
     }
   };
-  
+
   return (
     <div style={{ padding: 20, maxWidth: 400, margin: '0 auto' }}>
       <h1>Criar conta no SPARZAS</h1>
