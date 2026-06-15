@@ -7,24 +7,24 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function Home() {
   const [videos, setVideos] = useState([]);
   const [user, setUser] = useState(null);
-  
+
   useEffect(() => {
     // Verifica se há sessão ativa
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
     });
-    
+
     // Carrega vídeos da API
     axios.get(`${API_URL}/videos`)
       .then(res => setVideos(res.data))
       .catch(err => console.error(err));
   }, []);
-  
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
   };
-  
+
   return (
     <div style={{ padding: 20, fontFamily: 'Arial' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
