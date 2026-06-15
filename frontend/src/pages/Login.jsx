@@ -8,17 +8,17 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    
+
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -26,7 +26,7 @@ export default function Login() {
       navigate('/'); // redireciona para Home após login
     }
   };
-  
+
   return (
     <div style={{ padding: 20, maxWidth: 400, margin: '0 auto' }}>
       <h1>Entrar no SPARZAS</h1>
