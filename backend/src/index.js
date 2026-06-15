@@ -9,6 +9,9 @@ app.use(express.json());
 const videosRouter = require('./routes/videos');
 app.use('/api/videos', videosRouter);
 
+const usersRouter = require('./routes/users');
+app.use('/api/users', usersRouter);
+
 app.get('/', (req, res) => res.send('SPARZAS API rodando!'));
 
 const PORT = process.env.PORT || 3001;
