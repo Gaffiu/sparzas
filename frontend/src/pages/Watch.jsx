@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,14 +13,51 @@ export default function Watch() {
   const { playLike, playClick } = useSound();
   const [liked, setLiked] = useState(false);
   const [particles, setParticles] = useState([]);
+  const videoRef = useRef(null);
+  const touchStartX = useRef(0);
 
   useEffect(() => {
     axios.get(`${API}/videos/${id}`).then(res => setVideo(res.data)).catch(() => {});
   }, [id]);
 
+  // Bloquear rotação ao entrar e restaurar ao sair (apenas mobile)
+  useEffect(() => {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+      return () => { screen.orientation.unlock(); };
+    }
+  }, []);
+
+  // Gestos no player (avançar/retroceder)
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(diff) > 50 && videoRef.current) {
+      if (diff > 0) {
+        videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+      } else {
+        videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10);
+      }
+      // Vibração ao pular
+      if (navigator.vibrate) navigator.vibrate(15);
+    }
+  };
+
+  // Picture-in-Picture
+  const requestPiP = () => {
+    if (videoRef.current && videoRef.current.webkitSetPresentationMode) {
+      videoRef.current.webkitSetPresentationMode('picture-in-picture');
+    } else if (videoRef.current && videoRef.current.requestPictureInPicture) {
+      videoRef.current.requestPictureInPicture().catch(() => {});
+    }
+  };
+
   const toggleLike = () => {
     if (!user) return;
     playLike();
+    if (navigator.vibrate) navigator.vibrate(15);
     setLiked(prev => !prev);
     const newParticles = Array.from({ length: 14 }, (_, i) => ({
       id: Math.random(),
@@ -31,16 +68,40 @@ export default function Watch() {
     setTimeout(() => setParticles([]), 600);
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: video?.title || 'Video no SPARZAS',
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => alert('Link copiado!'));
+    }
+  };
+
   if (!video) return <div style={{ textAlign:'center', padding:60, color:'#aaa' }}>Carregando video...</div>;
 
   return (
     <div style={{ maxWidth:1000, margin:'0 auto' }}>
-      {/* Player */}
-      <div style={{ borderRadius:18, overflow:'hidden', background:'#000', marginBottom:24, boxShadow:'0 8px 32px rgba(0,0,0,0.6)' }}>
-        <video controls src={video.video_url} style={{ width:'100%', display:'block' }} poster={video.thumbnail_url || undefined} />
+      {/* Player com gestos */}
+      <div style={{ borderRadius:18, overflow:'hidden', background:'#000', marginBottom:24, boxShadow:'0 8px 32px rgba(0,0,0,0.6)', position:'relative' }}>
+        <video
+          ref={videoRef}
+          controls
+          src={video.video_url}
+          style={{ width:'100%', display:'block', touchAction:'none' }}
+          poster={video.thumbnail_url || undefined}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        />
+        <button onClick={requestPiP} style={{
+          position:'absolute', top:16, right:16, background:'rgba(0,0,0,0.6)', color:'#fff', border:'none',
+          borderRadius:8, padding:'4px 10px', fontSize:'0.9rem', cursor:'pointer',
+        }}>
+          PiP
+        </button>
       </div>
 
-      {/* Titulo e acoes */}
       <h1 style={{ fontSize:'1.8rem', fontWeight:700, marginBottom:16, lineHeight:1.3 }}>{video.title}</h1>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16, marginBottom:24 }}>
         <div style={{ display:'flex', alignItems:'center', gap:14 }}>
@@ -60,11 +121,10 @@ export default function Watch() {
           }}>
             <span style={{ fontSize:'1.2rem' }}>{liked ? '✓' : ''}</span> {liked ? 'Curtido' : 'Curtir'}
           </button>
-          <button onClick={playClick} style={{
+          <button onClick={() => { playClick(); handleShare(); }} style={{
             background:'transparent', border:'1px solid #333', color:'#fff',
             padding:'8px 20px', borderRadius:24, fontWeight:500, fontSize:'0.9rem', cursor:'pointer',
           }}>Compartilhar</button>
-          {/* Particulas */}
           {particles.map(p => (
             <span key={p.id} style={{
               position:'absolute', left:'calc(50% + 30px)', top:'50%',
@@ -76,12 +136,10 @@ export default function Watch() {
         </div>
       </div>
 
-      {/* Descricao */}
       <div style={{ background:'#0f0f0f', padding:20, borderRadius:16, marginBottom:32, whiteSpace:'pre-wrap', lineHeight:1.6 }}>
         {video.description || 'Sem descricao.'}
       </div>
 
-      {/* Comentarios placeholder */}
       <h3 style={{ marginBottom:16 }}>Comentarios</h3>
       <p style={{ color:'#888' }}>Em breve...</p>
     </div>
