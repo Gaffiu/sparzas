@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigate, Link } from 're
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { useSound } from './hooks/useSound';
 import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
@@ -31,6 +32,8 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const Trending = lazy(() => import('./pages/Trending'));
 const Category = lazy(() => import('./pages/Category'));
 const SearchHistory = lazy(() => import('./pages/SearchHistory'));
+const Premium = lazy(() => import('./pages/Premium'));
+const Sessions = lazy(() => import('./pages/Sessions'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 class ErrorBoundary extends React.Component {
@@ -100,10 +103,7 @@ function Layout() {
         <div className="nav-actions">
           {user ? (
             <>
-              <Link to="/notifications" className="nav-icon-btn" style={{ position:'relative' }}>
-                <IconNotifications size={22} />
-                <span style={{ position:'absolute', top:2, right:2, width:8, height:8, background:'#ff453a', borderRadius:'50%' }} />
-              </Link>
+              <Link to="/notifications" className="nav-icon-btn" style={{ position:'relative' }}><IconNotifications size={22} /><span style={{ position:'absolute', top:2, right:2, width:8, height:8, background:'#ff453a', borderRadius:'50%' }} /></Link>
               <Link to="/upload" className="upload-link" onClick={() => { vibrate(); playClick(); }}><IconUpload size={18} /> Publicar</Link>
             </>
           ) : (
@@ -140,6 +140,8 @@ function Layout() {
                 <Route path="/trending" element={<Trending />} />
                 <Route path="/category/:slug" element={<Category />} />
                 <Route path="/search-history" element={<SearchHistory />} />
+                <Route path="/premium" element={<Premium />} />
+                <Route path="/sessions" element={<Sessions />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
@@ -156,11 +158,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ThemeProvider>
-          <ToastProvider>
-            <Layout />
-          </ToastProvider>
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <Layout />
+            </ToastProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </AuthProvider>
     </BrowserRouter>
   );
