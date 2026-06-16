@@ -11,54 +11,41 @@ export default function Channel() {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [videos, setVideos] = useState([]);
-  const [subscriberCount, setSubscriberCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const { user } = useAuth();
 
   useEffect(() => {
-    axios.get(`${API}/users/${id}`).then(res => {
-      setProfile(res.data.profile);
-      setVideos(res.data.videos);
-    }).catch(() => {});
-    // Buscar contagem de inscritos (podemos criar uma rota ou estimar)
-    // Por simplicidade, usaremos uma rota futura. Por enquanto, exibiremos o número de vídeos.
+    if (!id) return;
+    axios.get(`${API}/users/${id}`)
+      .then(res => {
+        setProfile(res.data.profile);
+        setVideos(res.data.videos);
+        setError('');
+      })
+      .catch(() => setError('Canal não encontrado.'))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (!profile) return <div style={{ textAlign:'center', padding:40, color:'#aaa' }}>Carregando canal...</div>;
+  if (loading) return <div className="page-loader"><div className="spinner" /></div>;
+  if (error) return <div style={{ textAlign: 'center', padding: 40, color: '#aaa' }}>{error}</div>;
+  if (!profile) return <div style={{ textAlign: 'center', padding: 40, color: '#aaa' }}>Perfil não encontrado.</div>;
 
   return (
     <div>
-      <div style={{
-        background: '#0f0f0f', padding: 24, borderRadius: 20, display: 'flex',
-        alignItems: 'center', gap: 20, marginBottom: 32,
-        border: '1px solid rgba(255,255,255,0.04)',
-      }}>
-        <div style={{
-          width: 80, height: 80, borderRadius: '50%', background: '#202020',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '2rem', color: '#00e676',
-        }}>
-          {profile.username ? profile.username[0].toUpperCase() : 'S'}
+      <div style={{ background: '#0f0f0f', padding: 20, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#252525', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#00e676' }}>
+          {profile.username?.[0]?.toUpperCase() || 'S'}
         </div>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: '1.6rem', margin: 0 }}>{profile.username}</h1>
-          <p style={{ color: '#888', margin: '4px 0' }}>
-            {videos.length} {videos.length === 1 ? 'vídeo' : 'vídeos'}
-          </p>
-          {user && user.id !== profile.id && (
-            <div style={{ marginTop: 8 }}>
-              <SubscribeButton channelId={profile.id} />
-            </div>
-          )}
+        <div>
+          <h1 style={{ margin: 0 }}>{profile.username || 'Usuário'}</h1>
+          <p style={{ color: '#888', margin: '4px 0' }}>{videos.length} vídeos</p>
+          {user && user.id !== profile.id && <SubscribeButton channelId={profile.id} />}
         </div>
       </div>
-      <h2 style={{ marginBottom: 20, fontSize: '1.4rem' }}>Vídeos do canal</h2>
-      {videos.length === 0 ? (
-        <p style={{ color: '#888' }}>Nenhum vídeo publicado.</p>
-      ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:24 }}>
-          {videos.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
-        </div>
-      )}
+      <div className="video-grid">
+        {videos.map(v => <VideoCard key={v.id} video={v} index={0} />)}
+      </div>
     </div>
   );
 }
