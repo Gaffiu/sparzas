@@ -5,6 +5,7 @@ import { useSound } from './hooks/useSound';
 import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
 import MobileTabBar from './components/MobileTabBar';
+import UserMenu from './components/UserMenu';
 import {
   IconSearch,
   IconMenu,
@@ -26,6 +27,8 @@ const Channel = lazy(() => import('./pages/Channel'));
 const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const History = lazy(() => import('./pages/History'));
 const Liked = lazy(() => import('./pages/Liked'));
+const Studio = lazy(() => import('./pages/Studio'));
+const WatchLater = lazy(() => import('./pages/WatchLater'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Placeholder de carregamento
@@ -148,13 +151,7 @@ function Layout() {
                   <IconUpload size={20} /> Publicar
                 </Link>
               )}
-              <button onClick={() => { logout(); vibrate(); playClick(); }} style={{
-                background: 'transparent', border: '1px solid #333', color: '#fff',
-                padding: '6px 16px', borderRadius: 20, fontSize: '0.85rem',
-                cursor: 'pointer', transition: '0.2s',
-              }}>
-                Sair
-              </button>
+              <UserMenu />
             </>
           ) : (
             <Link to="/login" onClick={() => { vibrate(); playClick(); }} style={{
@@ -205,6 +202,8 @@ function Layout() {
                 <Route path="/subscriptions" element={<Subscriptions />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/liked" element={<Liked />} />
+                <Route path="/studio" element={<Studio />} />
+                <Route path="/watch-later" element={<WatchLater />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnimatedPage>
