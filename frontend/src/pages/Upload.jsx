@@ -25,6 +25,10 @@ export default function Upload() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      if (!selectedFile.type.startsWith('video/')) {
+        alert('Selecione um arquivo de vídeo válido.');
+        return;
+      }
       setFile(selectedFile);
       setPreviewUrl(URL.createObjectURL(selectedFile));
     }
@@ -47,25 +51,36 @@ export default function Upload() {
     playUpload();
     const fileName = `${user.id}/${Date.now()}_${file.name}`;
     try {
-      const { error } = await supabase.storage.from('videos').upload(fileName, file, { upsert: false });
+      const { error } = await supabase.storage.from('videos').upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
       if (error) throw error;
-      // Simular progresso
+
       let prog = 0;
       const interval = setInterval(() => {
         prog += 8;
         if (prog >= 95) clearInterval(interval);
         setProgress(prog);
       }, 200);
+
       const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
       clearInterval(interval);
       setProgress(100);
+
       const res = await axios.post(`${API}/videos`, {
-        user_id: user.id, title: title.trim(), description: desc.trim(),
-        video_url: publicUrl, thumbnail_url: 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS'
+        user_id: user.id,
+        title: title.trim(),
+        description: desc.trim(),
+        video_url: publicUrl,
+        thumbnail_url: 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS'
       });
+
       setTimeout(() => navigate(`/watch/${res.data.id}`), 400);
     } catch (err) {
-      alert(err.message || 'Erro no upload');
+      console.error('Erro no upload:', err);
+      alert('Erro ao enviar vídeo. Verifique as permissões do bucket no Supabase.');
+    } finally {
       setUploading(false);
     }
   };
@@ -74,7 +89,6 @@ export default function Upload() {
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: 28 }}>Publicar vídeo</h1>
       <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Área de upload drag-and-drop / clique */}
         <div
           onClick={() => fileInputRef.current?.click()}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -82,13 +96,9 @@ export default function Upload() {
           onDrop={handleDrop}
           style={{
             border: `2px dashed ${dragOver ? '#00e676' : '#2a2a2a'}`,
-            borderRadius: 16,
-            padding: 40,
-            textAlign: 'center',
+            borderRadius: 16, padding: 40, textAlign: 'center',
             background: dragOver ? 'rgba(0,230,118,0.05)' : '#0f0f0f',
-            cursor: 'pointer',
-            transition: '0.2s',
-            position: 'relative',
+            cursor: 'pointer', transition: '0.2s', position: 'relative',
           }}
         >
           <input
@@ -105,24 +115,20 @@ export default function Upload() {
               <video src={previewUrl} style={{ width: '100%', maxHeight: 200, borderRadius: 12, marginBottom: 12 }} controls />
               <p style={{ color: '#00e676', margin: 0 }}>{file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)</p>
               <button type="button" onClick={() => { setFile(null); setPreviewUrl(null); }} style={{
-                background: 'transparent', border: '1px solid #333', color: '#fff', padding: '6px 16px', borderRadius: 20,
-                marginTop: 12, cursor: 'pointer', fontSize: '0.85rem',
+                background: 'transparent', border: '1px solid #333', color: '#fff', padding: '6px 16px',
+                borderRadius: 20, marginTop: 12, cursor: 'pointer', fontSize: '0.85rem',
               }}>Remover</button>
             </div>
           ) : (
             <div>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12 }}>
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
               <p style={{ color: '#888', margin: 0 }}>Toque para selecionar um vídeo da galeria</p>
               <p style={{ color: '#666', fontSize: '0.8rem', marginTop: 4 }}>ou arraste o arquivo para cá</p>
             </div>
           )}
         </div>
-
-        {/* Campos de título e descrição */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
             style={inputStyle}
@@ -139,8 +145,6 @@ export default function Upload() {
             rows={4}
           />
         </div>
-
-        {/* Barra de progresso */}
         {uploading && (
           <div style={{ background: '#1a1a1a', borderRadius: 8, height: 6, overflow: 'hidden' }}>
             <div style={{
@@ -151,7 +155,6 @@ export default function Upload() {
             }} />
           </div>
         )}
-
         <button
           type="submit"
           disabled={uploading || !file}
