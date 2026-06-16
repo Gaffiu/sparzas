@@ -1,10 +1,13 @@
 export default function Logo() {
   return (
-    <svg width="38" height="38" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'neonPulse 2s infinite' }}>
+    <svg width="36" height="36" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'neonPulse 2s infinite' }}>
       <defs>
         <filter id="logoGlow">
           <feGaussianBlur stdDeviation="2.5" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
         </filter>
       </defs>
       <path d="M22 2L6 14V34L22 42L38 34V14L22 2Z" fill="#0f0f0f" stroke="#00e676" strokeWidth="2.5" filter="url(#logoGlow)"/>
