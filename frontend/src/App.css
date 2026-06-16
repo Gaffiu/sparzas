@@ -468,3 +468,44 @@ html, body, #root {
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
+
+/* ... (mantenha o CSS anterior e adicione ao final) ... */
+
+/* Shorts */
+.shorts-container {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: calc(100vh - 56px);
+}
+.shorts-video {
+  scroll-snap-align: start;
+  height: 100%;
+  position: relative;
+}
+
+/* Mini-player (adicione no componente quando implementar) */
+.mini-player {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  width: 140px;
+  height: 80px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 300;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+/* Temas */
+.light-theme {
+  --bg-primary: #fff;
+  --bg-secondary: #f5f5f5;
+  --text-primary: #111;
+  --text-secondary: #555;
+  background: #fff;
+}
+.green-theme {
+  --bg-primary: #0a1a0a;
+  --bg-secondary: #0f2a0f;
+}
