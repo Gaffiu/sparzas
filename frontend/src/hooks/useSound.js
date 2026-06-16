@@ -1,8 +1,6 @@
 let audioCtx = null;
 function getCtx() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
@@ -22,6 +20,5 @@ export function useSound() {
     playClick: () => tone(700, 'square', 0.06, 0.08),
     playLike: () => { tone(880, 'sine', 0.12); setTimeout(() => tone(1100, 'sine', 0.1), 80); },
     playUpload: () => { tone(400, 'triangle', 0.2); setTimeout(() => tone(600, 'triangle', 0.25), 120); },
-    playHover: () => tone(1000, 'sine', 0.04, 0.03),
   };
 }
