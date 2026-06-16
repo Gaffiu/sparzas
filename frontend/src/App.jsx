@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { useSound } from './hooks/useSound';
 import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
@@ -8,6 +9,7 @@ import MobileTabBar from './components/MobileTabBar';
 import { IconSearch, IconMenu, IconUpload } from './components/Icons';
 import './App.css';
 
+// Lazy load das páginas
 const Home = lazy(() => import('./pages/Home'));
 const Watch = lazy(() => import('./pages/Watch'));
 const Upload = lazy(() => import('./pages/Upload'));
@@ -23,11 +25,13 @@ const Explore = lazy(() => import('./pages/Explore'));
 const Playlists = lazy(() => import('./pages/Playlists'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Permissions = lazy(() => import('./pages/Permissions'));
+const Shorts = lazy(() => import('./pages/Shorts'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
-  static getDerivedStateFromError(error) { return { hasError: true }; }
+  static getDerivedStateFromError() { return { hasError: true }; }
   render() {
     if (this.state.hasError) return <div style={{ textAlign: 'center', padding: 60, color: '#aaa' }}><h2>Algo deu errado.</h2><button onClick={() => this.setState({ hasError: false })} className="btn btn-primary">Tentar novamente</button></div>;
     return this.props.children;
@@ -53,14 +57,12 @@ function Layout() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Swipe da borda esquerda
   useEffect(() => {
     if (!isMobile) return;
     let touchStartX = 0;
     const handleTouchStart = (e) => { touchStartX = e.touches[0].clientX; };
     const handleTouchEnd = (e) => {
-      const diff = e.changedTouches[0].clientX - touchStartX;
-      if (touchStartX < 30 && diff > 60) setSidebarOpen(true);
+      if (touchStartX < 30 && e.changedTouches[0].clientX - touchStartX > 60) setSidebarOpen(true);
     };
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -90,7 +92,10 @@ function Layout() {
         )}
         <div className="nav-actions">
           {user ? (
-            <Link to="/upload" className="upload-link" onClick={() => { vibrate(); playClick(); }}><IconUpload size={18} /> Publicar</Link>
+            <>
+              <Link to="/notifications" style={{ color: '#fff', padding: 8 }}>🔔</Link>
+              <Link to="/upload" className="upload-link" onClick={() => { vibrate(); playClick(); }}><IconUpload size={18} /> Publicar</Link>
+            </>
           ) : (
             <Link to="/login" className="login-btn" onClick={() => { vibrate(); playClick(); }}>Entrar</Link>
           )}
@@ -107,6 +112,7 @@ function Layout() {
               <Routes location={location}>
                 <Route path="/" element={<Home />} />
                 <Route path="/watch/:id" element={<Watch />} />
+                <Route path="/shorts" element={<Shorts />} />
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -120,6 +126,7 @@ function Layout() {
                 <Route path="/explore" element={<Explore />} />
                 <Route path="/playlists" element={<Playlists />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/notifications" element={<Notifications />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
@@ -132,5 +139,13 @@ function Layout() {
 }
 
 export default function App() {
-  return <BrowserRouter><AuthProvider><Layout /></AuthProvider></BrowserRouter>;
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <Layout />
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
