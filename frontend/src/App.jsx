@@ -8,15 +8,13 @@ import MobileTabBar from './components/MobileTabBar';
 import { IconSearch, IconMenu, IconUpload } from './components/Icons';
 import './App.css';
 
-// Lazy load das páginas (incluindo novas)
+// Lazy load – apenas páginas já existentes
 const Home = lazy(() => import('./pages/Home'));
 const Watch = lazy(() => import('./pages/Watch'));
 const Upload = lazy(() => import('./pages/Upload'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Channel = lazy(() => import('./pages/Channel'));
-const Community = lazy(() => import('./pages/Community'));
-const Messages = lazy(() => import('./pages/Messages'));
 const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const History = lazy(() => import('./pages/History'));
 const Liked = lazy(() => import('./pages/Liked'));
@@ -25,24 +23,7 @@ const WatchLater = lazy(() => import('./pages/WatchLater'));
 const Explore = lazy(() => import('./pages/Explore'));
 const Playlists = lazy(() => import('./pages/Playlists'));
 const Settings = lazy(() => import('./pages/Settings'));
-const Report = lazy(() => import('./pages/Report'));
 const Permissions = lazy(() => import('./pages/Permissions'));
-const About = lazy(() => import('./pages/About'));
-const Terms = lazy(() => import('./pages/Terms'));
-const Privacy = lazy(() => import('./pages/Privacy'));
-const Contact = lazy(() => import('./pages/Contact'));
-const FAQ = lazy(() => import('./pages/FAQ'));
-const SearchResults = lazy(() => import('./pages/SearchResults'));
-const Category = lazy(() => import('./pages/Category'));
-const Trending = lazy(() => import('./pages/Trending'));
-const Live = lazy(() => import('./pages/Live'));
-const Library = lazy(() => import('./pages/Library'));
-const Analytics = lazy(() => import('./pages/Analytics'));
-const Monetization = lazy(() => import('./pages/Monetization'));
-const Customization = lazy(() => import('./pages/Customization'));
-const Accessibility = lazy(() => import('./pages/Accessibility'));
-const Feedback = lazy(() => import('./pages/Feedback'));
-const Changelog = lazy(() => import('./pages/Changelog'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function PageLoader() {
@@ -73,7 +54,7 @@ function Layout() {
     e.preventDefault();
     if (search.trim()) {
       vibrate(); playClick();
-      navigate(`/search?q=${encodeURIComponent(search.trim())}`);
+      navigate(`/?search=${encodeURIComponent(search.trim())}`);
     }
   };
   const closeSidebar = () => setSidebarOpen(false);
@@ -125,8 +106,6 @@ function Layout() {
               <Route path="/register" element={<Register />} />
               <Route path="/permissions" element={<Permissions />} />
               <Route path="/channel/:id" element={<Channel />} />
-              <Route path="/channel/:id/community" element={<Community />} />
-              <Route path="/messages" element={<Messages />} />
               <Route path="/subscriptions" element={<Subscriptions />} />
               <Route path="/history" element={<History />} />
               <Route path="/liked" element={<Liked />} />
@@ -135,23 +114,6 @@ function Layout() {
               <Route path="/explore" element={<Explore />} />
               <Route path="/playlists" element={<Playlists />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/report/:type/:id" element={<Report />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/search" element={<SearchResults />} />
-              <Route path="/category/:slug" element={<Category />} />
-              <Route path="/trending" element={<Trending />} />
-              <Route path="/live" element={<Live />} />
-              <Route path="/library" element={<Library />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/monetization" element={<Monetization />} />
-              <Route path="/customization" element={<Customization />} />
-              <Route path="/accessibility" element={<Accessibility />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/changelog" element={<Changelog />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
