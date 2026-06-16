@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -17,10 +17,26 @@ export default function Upload() {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
+  const [permission, setPermission] = useState('prompt'); // 'granted', 'denied', 'prompt'
   const { playUpload, playClick } = useSound();
   const fileInputRef = useRef(null);
 
   if (!user) { navigate('/login'); return null; }
+
+  // Solicitar permissões de câmera e microfone
+  const requestPermissions = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      setPermission('granted');
+      fileInputRef.current?.click();
+    } catch (err) {
+      console.error('Permissão negada:', err);
+      setPermission('denied');
+      // Fallback: abrir seletor de arquivos mesmo sem permissão de câmera
+      fileInputRef.current?.click();
+    }
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -90,7 +106,7 @@ export default function Upload() {
       <h1 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: 28 }}>Publicar vídeo</h1>
       <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div
-          onClick={() => fileInputRef.current?.click()}
+          onClick={requestPermissions}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
@@ -114,7 +130,7 @@ export default function Upload() {
             <div>
               <video src={previewUrl} style={{ width: '100%', maxHeight: 200, borderRadius: 12, marginBottom: 12 }} controls />
               <p style={{ color: '#00e676', margin: 0 }}>{file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)</p>
-              <button type="button" onClick={() => { setFile(null); setPreviewUrl(null); }} style={{
+              <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); setPreviewUrl(null); }} style={{
                 background: 'transparent', border: '1px solid #333', color: '#fff', padding: '6px 16px',
                 borderRadius: 20, marginTop: 12, cursor: 'pointer', fontSize: '0.85rem',
               }}>Remover</button>
@@ -126,46 +142,26 @@ export default function Upload() {
               </svg>
               <p style={{ color: '#888', margin: 0 }}>Toque para selecionar um vídeo da galeria</p>
               <p style={{ color: '#666', fontSize: '0.8rem', marginTop: 4 }}>ou arraste o arquivo para cá</p>
+              {permission === 'denied' && (
+                <p style={{ color: '#ff6b6b', fontSize: '0.85rem', marginTop: 8 }}>Permissão de câmera negada. Você ainda pode selecionar um arquivo.</p>
+              )}
             </div>
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input
-            style={inputStyle}
-            placeholder="Título do vídeo (obrigatório)"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            required
-          />
-          <textarea
-            style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }}
-            placeholder="Descrição (opcional)"
-            value={desc}
-            onChange={e => setDesc(e.target.value)}
-            rows={4}
-          />
+          <input style={inputStyle} placeholder="Título do vídeo (obrigatório)" value={title} onChange={e => setTitle(e.target.value)} required />
+          <textarea style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }} placeholder="Descrição (opcional)" value={desc} onChange={e => setDesc(e.target.value)} rows={4} />
         </div>
         {uploading && (
           <div style={{ background: '#1a1a1a', borderRadius: 8, height: 6, overflow: 'hidden' }}>
-            <div style={{
-              width: `${progress}%`, height: '100%',
-              background: 'linear-gradient(90deg, #00e676, #1de9b6)',
-              transition: 'width 0.3s',
-              boxShadow: '0 0 8px rgba(0,230,118,0.5)',
-            }} />
+            <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #00e676, #1de9b6)', transition: 'width 0.3s', boxShadow: '0 0 8px rgba(0,230,118,0.5)' }} />
           </div>
         )}
-        <button
-          type="submit"
-          disabled={uploading || !file}
-          onClick={playClick}
-          style={{
-            background: '#00e676', color: '#000', border: 'none', padding: '14px 32px',
-            borderRadius: 28, fontWeight: 700, fontSize: '1rem', cursor: 'pointer',
-            alignSelf: 'flex-start', letterSpacing: 0.5, transition: '0.2s',
-            opacity: uploading || !file ? 0.6 : 1,
-          }}
-        >
+        <button type="submit" disabled={uploading || !file} onClick={playClick} style={{
+          background: '#00e676', color: '#000', border: 'none', padding: '14px 32px', borderRadius: 28, fontWeight: 700,
+          fontSize: '1rem', cursor: 'pointer', alignSelf: 'flex-start', letterSpacing: 0.5, transition: '0.2s',
+          opacity: uploading || !file ? 0.6 : 1,
+        }}>
           {uploading ? 'Enviando...' : 'Publicar vídeo'}
         </button>
       </form>
