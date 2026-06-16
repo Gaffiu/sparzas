@@ -1,14 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../hooks/useSound';
-import {
-  IconHome,
-  IconSubscriptions,
-  IconUpload,
-  IconChannel,
-  IconExplore,
-  IconLibrary
-} from './Icons';
+import { IconHome, IconSubscriptions, IconUpload, IconExplore, IconLibrary } from './Icons';
 
 export default function MobileTabBar() {
   const navigate = useNavigate();
@@ -16,9 +9,7 @@ export default function MobileTabBar() {
   const { user } = useAuth();
   const { playClick } = useSound();
 
-  const vibrate = () => {
-    if (navigator.vibrate) navigator.vibrate(10);
-  };
+  const vibrate = () => { if (navigator.vibrate) navigator.vibrate(10); };
 
   const tabs = [
     { path: '/', icon: IconHome, label: 'Início' },
@@ -29,13 +20,9 @@ export default function MobileTabBar() {
   ];
 
   const handleTab = (tab) => {
-    vibrate();
-    playClick();
-    if (tab.requireAuth && !user) {
-      navigate('/login');
-    } else {
-      navigate(tab.path);
-    }
+    vibrate(); playClick();
+    if (tab.requireAuth && !user) { navigate('/login'); }
+    else { navigate(tab.path); }
   };
 
   return (
@@ -44,11 +31,7 @@ export default function MobileTabBar() {
         const isActive = location.pathname === tab.path;
         const IconComponent = tab.icon;
         return (
-          <button
-            key={tab.path}
-            onClick={() => handleTab(tab)}
-            className={`tab-btn ${isActive ? 'active' : ''}`}
-          >
+          <button key={tab.path} onClick={() => handleTab(tab)} className={`tab-btn ${isActive ? 'active' : ''}`}>
             <IconComponent size={22} color={isActive ? '#00e676' : '#888'} />
             <span>{tab.label}</span>
           </button>
