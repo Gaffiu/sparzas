@@ -12,47 +12,20 @@ export default function Home() {
   const search = searchParams.get('search');
 
   useEffect(() => {
-    setLoading(true);
-    const endpoint = search ? `${API}/videos?search=${encodeURIComponent(search)}` : `${API}/videos`;
-    axios.get(endpoint)
-      .then(res => setVideos(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const endpoint = search ? `${API}/videos?search=${search}` : `${API}/videos`;
+    axios.get(endpoint).then(res => setVideos(res.data)).finally(() => setLoading(false));
   }, [search]);
 
-  if (loading) {
-    return (
-      <div className="video-grid">
-        {Array(8).fill(0).map((_, i) => (
-          <div key={i} className="video-card">
-            <div className="skeleton" style={{ paddingTop: '56.25%' }} />
-            <div style={{ padding: 16, display: 'flex', gap: 12 }}>
-              <div className="skeleton" style={{ width: 36, height: 36, borderRadius: '50%' }} />
-              <div style={{ flex: 1 }}>
-                <div className="skeleton" style={{ height: 16, width: '80%', marginBottom: 8 }} />
-                <div className="skeleton" style={{ height: 12, width: '60%' }} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  if (loading) return <p>Carregando...</p>;
 
   return (
     <div>
       {search && <h2 style={{ marginBottom: 20 }}>Resultados para: "{search}"</h2>}
       {videos.length === 0 ? (
-        <div style={{ textAlign: 'center', marginTop: 80 }}>
-          <h2 style={{ color: 'var(--text-muted)' }}>Nenhum vídeo encontrado</h2>
-        </div>
+        <p style={{ textAlign: 'center', marginTop: 80, color: '#888' }}>Nenhum vídeo encontrado</p>
       ) : (
-        <div className="video-grid">
-          {videos.map((video, i) => (
-            <div key={video.id} className="fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
-              <VideoCard video={video} />
-            </div>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24 }}>
+          {videos.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
         </div>
       )}
     </div>
