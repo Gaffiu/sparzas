@@ -16,34 +16,26 @@ export default function CommentSection({ videoId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || !user) return;
-    const res = await axios.post(`${API}/videos/${videoId}/comments`, {
-      user_id: user.id,
-      content: newComment
-    });
-    setComments([...comments, res.data]);
+    const res = await axios.post(`${API}/videos/${videoId}/comments`, { user_id: user.id, content: newComment });
+    setComments(prev => [...prev, res.data]);
     setNewComment('');
   };
 
   return (
-    <div>
-      <h3 style={{ margin: '20px 0 10px' }}>Comentários</h3>
+    <div style={{ marginTop: 32 }}>
+      <h3 style={{ marginBottom: 20, fontSize: '1.2rem' }}>Comentários ({comments.length})</h3>
       {user && (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-          <input
-            type="text"
-            placeholder="Adicione um comentário..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            style={{ flex: 1, padding: 8, borderRadius: 20, border: '1px solid #333', background: '#121212', color: 'white' }}
-          />
-          <button type="submit" className="btn-primary" style={{ padding: '8px 16px' }}>Comentar</button>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+          <input className="form-input" placeholder="Adicione um comentário..." value={newComment} onChange={(e) => setNewComment(e.target.value)} style={{ flex: 1, borderRadius: 24 }} />
+          <button type="submit" className="btn btn-primary">Enviar</button>
         </form>
       )}
       {comments.map(comment => (
-        <div key={comment.id} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-          <img src={comment.profiles?.avatar_url || 'https://via.placeholder.com/32'} style={{ width: 32, height: 32, borderRadius: '50%' }} alt="" />
-          <div>
-            <strong>{comment.profiles?.username}</strong> • <small>{new Date(comment.created_at).toLocaleDateString()}</small>
+        <div key={comment.id} className="comment-item">
+          <img className="comment-avatar" src={comment.profiles?.avatar_url || 'https://via.placeholder.com/40'} alt="" />
+          <div className="comment-body">
+            <strong>{comment.profiles?.username || 'Usuário'}</strong>
+            <span>{new Date(comment.created_at).toLocaleDateString('pt-BR')}</span>
             <p>{comment.content}</p>
           </div>
         </div>
