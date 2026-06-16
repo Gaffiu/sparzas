@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { IconLike, IconShare } from './Icons';
 
-export default function Player({ src, poster, onLike, liked, likeCount, onShare, onPiP, onTheater }) {
+export default function Player({ src, poster, onLike, liked, likeCount, onShare, onPiP, onTheater, chapters = [] }) {
   const videoRef = useRef(null);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -53,20 +52,15 @@ export default function Player({ src, poster, onLike, liked, likeCount, onShare,
 
   return (
     <div className="player-container">
-      <video
-        ref={videoRef}
-        src={src}
-        poster={poster}
-        onClick={togglePlay}
-        className="player-video"
-      />
+      <video ref={videoRef} src={src} poster={poster} onClick={togglePlay} className="player-video" />
       <div className="player-controls">
-        <button onClick={togglePlay} className="control-btn">
-          {playing ? '⏸' : '▶️'}
-        </button>
+        <button onClick={togglePlay} className="control-btn">{playing ? '⏸' : '▶️'}</button>
         <span className="time">{formatTime(currentTime)} / {formatTime(duration)}</span>
         <div className="progress-bar" onClick={handleSeek}>
           <div className="progress-fill" style={{ width: `${(currentTime / duration) * 100}%` }} />
+          {chapters.map(ch => (
+            <div key={ch.time} className="chapter-marker" style={{ left: `${(ch.time / duration) * 100}%` }} title={ch.title} />
+          ))}
         </div>
         <button onClick={onTheater} className="control-btn" title="Modo teatro">📺</button>
         <button onClick={onPiP} className="control-btn" title="Picture-in-Picture">📌</button>
