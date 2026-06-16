@@ -5,17 +5,17 @@ import { useAuth } from '../contexts/AuthContext';
 const API = import.meta.env.VITE_API_URL;
 
 export default function LikeButton({ videoId, initialLiked }) {
-  const { user } = useAuth();
   const [liked, setLiked] = useState(initialLiked);
-  const [animate, setAnimate] = useState(false);
+  const [burst, setBurst] = useState(false);
+  const { user } = useAuth();
 
   const toggleLike = async () => {
     if (!user) return;
+    setBurst(true);
+    setTimeout(() => setBurst(false), 300);
     try {
       const res = await axios.post(`${API}/videos/${videoId}/like`, { user_id: user.id });
       setLiked(res.data.liked);
-      setAnimate(true);
-      setTimeout(() => setAnimate(false), 300);
     } catch (err) {
       console.error(err);
     }
@@ -24,8 +24,8 @@ export default function LikeButton({ videoId, initialLiked }) {
   return (
     <button
       onClick={toggleLike}
-      className={`btn-outline ${animate ? 'like-animate' : ''}`}
-      style={{ color: liked ? 'var(--accent)' : undefined }}
+      className={`btn ${liked ? 'btn-primary' : 'btn-outline'} ${burst ? 'like-animate' : ''}`}
+      style={burst ? { animation: 'likeBurst 0.3s ease' } : {}}
     >
       {liked ? '👍' : '👍🏾'} {liked ? 'Curtido' : 'Curtir'}
     </button>
