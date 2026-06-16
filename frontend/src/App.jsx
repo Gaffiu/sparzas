@@ -43,6 +43,28 @@ function Layout() {
   const [search, setSearch] = useState('');
   const location = useLocation();
 
+  // Swipe da borda esquerda para abrir sidebar no mobile
+useEffect(() => {
+  if (!isMobile) return;
+  let touchStartX = 0;
+  const handleTouchStart = (e) => {
+    touchStartX = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (touchStartX < 30 && diff > 60) {
+      setSidebarOpen(true);
+      vibrate();
+    }
+  };
+  window.addEventListener('touchstart', handleTouchStart, { passive: true });
+  window.addEventListener('touchend', handleTouchEnd, { passive: true });
+  return () => {
+    window.removeEventListener('touchstart', handleTouchStart);
+    window.removeEventListener('touchend', handleTouchEnd);
+  };
+}, [isMobile, vibrate]);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
