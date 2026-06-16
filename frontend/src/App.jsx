@@ -16,6 +16,7 @@ import {
 } from './components/Icons';
 import './App.css';
 
+// Lazy load de todas as páginas (incluindo novas)
 const Home = lazy(() => import('./pages/Home'));
 const Watch = lazy(() => import('./pages/Watch'));
 const Shorts = lazy(() => import('./pages/Shorts'));
@@ -33,6 +34,9 @@ const Playlists = lazy(() => import('./pages/Playlists'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Permissions = lazy(() => import('./pages/Permissions'));
 const Notifications = lazy(() => import('./pages/Notifications'));
+const Trending = lazy(() => import('./pages/Trending'));
+const Category = lazy(() => import('./pages/Category'));
+const SearchHistory = lazy(() => import('./pages/SearchHistory'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 class ErrorBoundary extends React.Component {
@@ -116,6 +120,10 @@ function Layout() {
       vibrate();
       playClick();
       navigate(`/?search=${encodeURIComponent(search.trim())}`);
+      // Salva no histórico de buscas
+      const history = JSON.parse(localStorage.getItem('sparzas_search_history') || '[]');
+      const updated = [search.trim(), ...history.filter(item => item !== search.trim())].slice(0, 20);
+      localStorage.setItem('sparzas_search_history', JSON.stringify(updated));
     }
   };
 
@@ -235,6 +243,9 @@ function Layout() {
                 <Route path="/playlists" element={<Playlists />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/trending" element={<Trending />} />
+                <Route path="/category/:slug" element={<Category />} />
+                <Route path="/search-history" element={<SearchHistory />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
