@@ -16,18 +16,36 @@ export default function Upload() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const { playUpload } = useSound();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
 
   if (!user) { navigate('/login'); return null; }
 
-  const requestMedia = async () => {
-    try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); stream.getTracks().forEach(t => t.stop()); } catch {}
-    fileInputRef.current?.click();
+  const requestMediaPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      setPermissionGranted(true);
+      fileInputRef.current?.click();
+    } catch (err) {
+      // Permissão negada, mas ainda permite selecionar arquivo
+      setPermissionGranted(false);
+      fileInputRef.current?.click();
+    }
   };
 
-  const handleFile = (e) => { if (e.target.files[0]) setFile(e.target.files[0]); };
+  const handleFile = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (!selectedFile.type.startsWith('video/')) {
+        addToast('Selecione um arquivo de vídeo válido.', 'error');
+        return;
+      }
+      setFile(selectedFile);
+    }
+  };
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -36,18 +54,31 @@ export default function Upload() {
     playUpload();
     const fileName = `${user.id}/${Date.now()}_${file.name}`;
     try {
-      const { error } = await supabase.storage.from('videos').upload(fileName, file);
+      const { error } = await supabase.storage.from('videos').upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
       if (error) throw error;
       let prog = 0;
-      const interval = setInterval(() => { prog += 10; if (prog >= 90) clearInterval(interval); setProgress(prog); }, 200);
+      const interval = setInterval(() => {
+        prog += 10;
+        if (prog >= 90) clearInterval(interval);
+        setProgress(prog);
+      }, 200);
       const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
       clearInterval(interval);
       setProgress(100);
-      await axios.post(`${API}/videos`, { user_id: user.id, title: title.trim(), description: desc.trim(), video_url: publicUrl, thumbnail_url: 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS' });
-      addToast('Vídeo publicado com sucesso!', 'success');
+      await axios.post(`${API}/videos`, {
+        user_id: user.id,
+        title: title.trim(),
+        description: desc.trim(),
+        video_url: publicUrl,
+        thumbnail_url: 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS'
+      });
+      addToast('Vídeo publicado!', 'success');
       navigate('/');
     } catch (err) {
-      addToast('Erro ao enviar vídeo: ' + err.message, 'error');
+      addToast('Erro: ' + (err.message || 'Falha no upload'), 'error');
     } finally {
       setUploading(false);
     }
@@ -55,16 +86,62 @@ export default function Upload() {
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h2>Publicar vídeo</h2>
+      <h2 style={{ marginBottom: 20 }}>Publicar vídeo</h2>
       <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div onClick={requestMedia} style={{ border: '2px dashed #333', borderRadius: 12, padding: 30, textAlign: 'center', background: '#0f0f0f', cursor: 'pointer' }}>
-          <input ref={fileInputRef} type="file" accept="video/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
-          {file ? <p style={{ color: '#00e676' }}>{file.name}</p> : <p style={{ color: '#aaa' }}>Toque para selecionar um vídeo</p>}
+        <div
+          onClick={requestMediaPermission}
+          style={{
+            border: '2px dashed #333', borderRadius: 12, padding: 30,
+            textAlign: 'center', background: '#0f0f0f', cursor: 'pointer',
+          }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/*"
+            capture="environment"
+            onChange={handleFile}
+            style={{ display: 'none' }}
+          />
+          {file ? (
+            <p style={{ color: '#00e676' }}>{file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)</p>
+          ) : (
+            <p style={{ color: '#aaa' }}>Toque para selecionar um vídeo (câmera ou galeria)</p>
+          )}
+          {!permissionGranted && file === null && (
+            <p style={{ fontSize: '0.8rem', color: '#888', marginTop: 8 }}>
+              Permitir acesso à câmera para gravar diretamente
+            </p>
+          )}
         </div>
-        <input className="search-input" placeholder="Título" value={title} onChange={e => setTitle(e.target.value)} required />
-        <textarea className="search-input" placeholder="Descrição" value={desc} onChange={e => setDesc(e.target.value)} rows={3} style={{ resize: 'vertical' }} />
-        {uploading && <div style={{ height: 4, background: '#333', borderRadius: 2 }}><div style={{ width: `${progress}%`, height: '100%', background: '#00e676' }} /></div>}
-        <button type="submit" disabled={uploading || !file} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>{uploading ? 'Enviando...' : 'Publicar'}</button>
+        <input
+          className="search-input"
+          placeholder="Título do vídeo"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          required
+        />
+        <textarea
+          className="search-input"
+          placeholder="Descrição"
+          value={desc}
+          onChange={e => setDesc(e.target.value)}
+          rows={3}
+          style={{ resize: 'vertical' }}
+        />
+        {uploading && (
+          <div style={{ background: '#1a1a1a', borderRadius: 6, height: 6, overflow: 'hidden' }}>
+            <div style={{ width: `${progress}%`, height: '100%', background: '#00e676', transition: 'width 0.3s' }} />
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={uploading || !file}
+          className="btn btn-primary"
+          style={{ alignSelf: 'flex-start' }}
+        >
+          {uploading ? 'Enviando...' : 'Publicar'}
+        </button>
       </form>
     </div>
   );
