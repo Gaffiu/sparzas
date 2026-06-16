@@ -9,14 +9,11 @@ export default function Subscriptions() {
   const { user } = useAuth();
   const [videos, setVideos] = useState([]);
   useEffect(() => {
-    if (user) {
-      axios.get(`${API}/users/${user.id}/feed`).then(res => setVideos(res.data));
-    }
+    if (user) axios.get(`${API}/users/${user.id}/feed`).then(res => setVideos(res.data));
   }, [user]);
-
   return (
-    <div className="fadeIn">
-      <h2>📺 Vídeos dos seus canais</h2>
+    <div className="fade-in">
+      <h2 style={{ marginBottom: 20 }}>📺 Inscrições</h2>
       <div className="video-grid">
         {videos.map(v => <VideoCard key={v.id} video={v} />)}
       </div>
