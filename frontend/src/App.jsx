@@ -5,7 +5,6 @@ import { useSound } from './hooks/useSound';
 import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
 import MobileTabBar from './components/MobileTabBar';
-import UserMenu from './components/UserMenu';
 import { IconSearch, IconMenu, IconUpload } from './components/Icons';
 import './App.css';
 
@@ -15,6 +14,8 @@ const Upload = lazy(() => import('./pages/Upload'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Channel = lazy(() => import('./pages/Channel'));
+const Community = lazy(() => import('./pages/Community'));
+const Messages = lazy(() => import('./pages/Messages'));
 const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const History = lazy(() => import('./pages/History'));
 const Liked = lazy(() => import('./pages/Liked'));
@@ -30,10 +31,6 @@ function PageLoader() {
       <div className="spinner" />
     </div>
   );
-}
-
-function AnimatedPage({ children }) {
-  return <div className="page page-active">{children}</div>;
 }
 
 function Layout() {
@@ -85,14 +82,9 @@ function Layout() {
         )}
         <div className="nav-actions">
           {user ? (
-            <>
-              {!isMobile && (
-                <Link to="/upload" className="upload-link" onClick={() => { vibrate(); playClick(); }}>
-                  <IconUpload size={20} /> Publicar
-                </Link>
-              )}
-              <UserMenu />
-            </>
+            <Link to="/upload" className="upload-link" onClick={() => { vibrate(); playClick(); }}>
+              <IconUpload size={20} /> Publicar
+            </Link>
           ) : (
             <Link to="/login" className="login-btn" onClick={() => { vibrate(); playClick(); }}>Entrar</Link>
           )}
@@ -109,24 +101,24 @@ function Layout() {
         )}
         <main className="main-content" style={{ paddingBottom: isMobile ? 80 : 28 }} onClick={() => sidebarOpen && closeSidebar()}>
           <Suspense fallback={<PageLoader />}>
-            <AnimatedPage key={location.pathname}>
-              <Routes location={location}>
-                <Route path="/" element={<Home />} />
-                <Route path="/watch/:id" element={<Watch />} />
-                <Route path="/upload" element={<Upload />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/channel/:id" element={<Channel />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/liked" element={<Liked />} />
-                <Route path="/studio" element={<Studio />} />
-                <Route path="/watch-later" element={<WatchLater />} />
-                <Route path="/explore" element={<Explore />} />
-                <Route path="/playlists" element={<Playlists />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AnimatedPage>
+            <Routes location={location}>
+              <Route path="/" element={<Home />} />
+              <Route path="/watch/:id" element={<Watch />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/channel/:id" element={<Channel />} />
+              <Route path="/channel/:id/community" element={<Community />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/liked" element={<Liked />} />
+              <Route path="/studio" element={<Studio />} />
+              <Route path="/watch-later" element={<WatchLater />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/playlists" element={<Playlists />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </Suspense>
         </main>
       </div>
