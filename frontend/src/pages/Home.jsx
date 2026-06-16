@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import VideoCard from '../components/VideoCard';
@@ -8,21 +8,50 @@ const API = import.meta.env.VITE_API_URL;
 export default function Home() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchParams] = useSearchParams();
   const search = searchParams.get('search');
+  const touchStart = useRef(0);
+
+  const fetchVideos = () => {
+    const endpoint = search ? `${API}/videos?search=${search}` : `${API}/videos`;
+    axios.get(endpoint).then(res => setVideos(res.data)).finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     setLoading(true);
-    const endpoint = search ? `${API}/videos?search=${encodeURIComponent(search)}` : `${API}/videos`;
-    axios.get(endpoint).then(res => setVideos(res.data)).catch(() => {}).finally(() => setLoading(false));
+    fetchVideos();
   }, [search]);
+
+  const handlePullRefresh = (e) => {
+    if (window.scrollY === 0) {
+      touchStart.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (window.scrollY === 0 && e.changedTouches[0].clientY - touchStart.current > 100) {
+      setRefreshing(true);
+      setTimeout(() => {
+        fetchVideos();
+        setRefreshing(false);
+      }, 1000);
+    }
+  };
 
   if (loading) {
     return (
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:24 }}>
+      <div className="video-grid">
         {Array(8).fill().map((_, i) => (
-          <div key={i} style={{ background:'#0f0f0f', borderRadius:16, paddingTop:'56.25%', position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%)', backgroundSize:'400% 100%', animation:'shimmer 2s infinite' }} />
+          <div key={i} className="skeleton-card">
+            <div className="skeleton-thumb" />
+            <div className="skeleton-info">
+              <div className="skeleton-avatar" />
+              <div className="skeleton-text">
+                <div className="skeleton-line" />
+                <div className="skeleton-line short" />
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -30,15 +59,13 @@ export default function Home() {
   }
 
   return (
-    <div>
-      {search && <h2 style={{ marginBottom:20, fontSize:'1.5rem', fontWeight:600 }}>Resultados para &quot;{search}&quot;</h2>}
+    <div onTouchStart={handlePullRefresh} onTouchEnd={handleTouchEnd}>
+      {refreshing && <div className="pull-indicator">Atualizando...</div>}
+      {search && <h2>Resultados para: "{search}"</h2>}
       {videos.length === 0 ? (
-        <div style={{ textAlign:'center', marginTop:80, color:'#888' }}>
-          <h2 style={{ fontWeight:400 }}>Nenhum video encontrado</h2>
-          <p>Seja o primeiro a publicar algo incrivel.</p>
-        </div>
+        <div className="empty-state">Nenhum vídeo encontrado.</div>
       ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px,1fr))', gap:24 }}>
+        <div className="video-grid">
           {videos.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
         </div>
       )}
