@@ -1,20 +1,21 @@
-export default function Logo() {
+export default function Logo({ size = 32 }) {
   return (
-    <svg width="36" height="36" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'neonPulse 2s infinite' }}>
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'neonPulse 2.5s ease-in-out infinite' }}>
       <defs>
         <filter id="logoGlow">
-          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feGaussianBlur stdDeviation="2" result="blur"/>
           <feMerge>
             <feMergeNode in="blur"/>
             <feMergeNode in="SourceGraphic"/>
           </feMerge>
         </filter>
+        <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop stopColor="#00e676"/><stop offset="1" stopColor="#00c853"/>
+        </linearGradient>
       </defs>
-      <path d="M22 2L6 14V34L22 42L38 34V14L22 2Z" fill="#0f0f0f" stroke="#00e676" strokeWidth="2.5" filter="url(#logoGlow)"/>
-      <path d="M22 10L12 18V30L22 36L32 30V18L22 10Z" fill="#00e676" opacity="0.85"/>
-      <text x="22" y="27" textAnchor="middle" fill="#0a0a0a" fontSize="11" fontWeight="900" fontFamily="Inter">S</text>
-      <line x1="22" y1="32" x2="22" y2="39" stroke="#00e676" strokeWidth="2.5" strokeLinecap="round" filter="url(#logoGlow)"/>
-      <line x1="16" y1="37" x2="28" y2="37" stroke="#00e676" strokeWidth="2.5" strokeLinecap="round" filter="url(#logoGlow)"/>
+      <path d="M22 2L6 14V34L22 42L38 34V14L22 2Z" fill="#0f0f0f" stroke="url(#logoGrad)" strokeWidth="2.5" filter="url(#logoGlow)"/>
+      <path d="M22 10L12 18V30L22 36L32 30V18L22 10Z" fill="url(#logoGrad)" opacity="0.9"/>
+      <text x="22" y="27" textAnchor="middle" fill="#0a0a0a" fontSize="11" fontWeight="900" fontFamily="Inter, sans-serif">S</text>
     </svg>
   );
 }
