@@ -21,13 +21,11 @@ export default function Watch() {
   const touchStartX = useRef(0);
 
   useEffect(() => {
-    // Buscar dados do vídeo
     axios.get(`${API}/videos/${id}`).then(res => setVideo(res.data)).catch(() => {});
-    // Buscar contagem de likes
     axios.get(`${API}/videos/${id}/likes/count`).then(res => setLikeCount(res.data.count));
   }, [id]);
 
-  // Bloquear rotação (mobile) e restaurar ao sair
+  // Bloquear rotação (mobile)
   useEffect(() => {
     if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('landscape').catch(() => {});
@@ -35,7 +33,7 @@ export default function Watch() {
     }
   }, []);
 
-  // Gestos no player: deslizar horizontalmente para avançar/retroceder
+  // Gestos no player
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
   };
@@ -63,14 +61,13 @@ export default function Watch() {
     }
   };
 
-  // Curtir vídeo
+  // Curtir
   const toggleLike = () => {
     if (!user) return;
     playLike();
     if (navigator.vibrate) navigator.vibrate(15);
     setLiked(prev => !prev);
     setLikeCount(prev => liked ? prev - 1 : prev + 1);
-    // Partículas de like
     const newParticles = Array.from({ length: 14 }, (_, i) => ({
       id: Math.random(),
       angle: (i / 14) * 360,
@@ -78,11 +75,10 @@ export default function Watch() {
     }));
     setParticles(newParticles);
     setTimeout(() => setParticles([]), 600);
-    // API de like
     axios.post(`${API}/videos/${id}/like`, { user_id: user.id }).catch(() => {});
   };
 
-  // Compartilhar (nativo ou fallback)
+  // Compartilhar
   const handleShare = () => {
     playClick();
     if (navigator.share) {
@@ -95,7 +91,7 @@ export default function Watch() {
     }
   };
 
-  // Salvar no histórico local
+  // Salvar no histórico
   useEffect(() => {
     if (!video) return;
     const history = JSON.parse(localStorage.getItem('sparzas_history') || '[]');
@@ -157,7 +153,6 @@ export default function Watch() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         flexWrap: 'wrap', gap: 16, marginBottom: 24,
       }}>
-        {/* Info do canal */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <Link
             to={`/channel/${video.user_id}`}
@@ -220,8 +215,9 @@ export default function Watch() {
                 position: 'absolute', left: 'calc(50% + 30px)', top: '50%',
                 width: 6, height: 6, borderRadius: '50%', background: '#00e676',
                 animation: 'particleBurst 0.6s ease-out forwards',
-                '--angle': `${p.angle}deg`, '--dist': `${p.dist}px`,
-              } as React.CSSProperties}
+                '--angle': `${p.angle}deg`,
+                '--dist': `${p.dist}px`,
+              }}
             />
           ))}
         </div>
