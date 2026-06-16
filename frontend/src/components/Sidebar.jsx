@@ -22,7 +22,6 @@ export default function Sidebar({ open, close }) {
         width: 260, background: '#0c0c0c', padding: '24px 0', height: 'calc(100vh - 64px)',
         position: 'fixed', left: 0, top: 64, zIndex: 150, overflowY: 'auto',
         borderRight: '1px solid rgba(255,255,255,0.04)',
-        transform: open ? 'translateX(0)' : 'translateX(-280px)', transition: 'transform 0.3s ease',
       }}>
         <NavLink to="/" end onClick={handleClick} style={({isActive}) => linkStyle(isActive)}>Início</NavLink>
         <NavLink to="/subscriptions" onClick={handleClick} style={({isActive}) => linkStyle(isActive)}>Inscrições</NavLink>
