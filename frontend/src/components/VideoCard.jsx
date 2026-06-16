@@ -2,14 +2,19 @@ import { Link } from 'react-router-dom';
 
 export default function VideoCard({ video }) {
   return (
-    <div className="video-card fadeIn">
-      <Link to={`/watch/${video.id}`}>
-        <img src={video.thumbnail_url || 'https://via.placeholder.com/320x180/00c853/000?text=SPARZAS'} alt={video.title} />
-        <div className="info">
+    <Link to={`/watch/${video.id}`} className="video-card fade-in-up">
+      <div className="thumbnail-wrapper">
+        <img src={video.thumbnail_url || 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS'} alt={video.title} loading="lazy" />
+        <span className="video-duration">12:34</span> {/* Idealmente viria do banco */}
+      </div>
+      <div className="video-info">
+        <img className="channel-avatar" src={video.profiles?.avatar_url || 'https://via.placeholder.com/36'} alt="" />
+        <div className="video-meta">
           <h3>{video.title}</h3>
-          <p>{video.profiles?.username || 'SPARZAS'} • {video.views || 0} visualizações</p>
+          <p>{video.profiles?.username || 'SPARZAS'}</p>
+          <p>{video.views || 0} visualizações • {new Date(video.created_at).toLocaleDateString('pt-BR')}</p>
         </div>
-      </Link>
-    </div>
+      </div>
+    </Link>
   );
 }
