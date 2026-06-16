@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../hooks/useSound';
+import { useToast } from '../contexts/ToastContext';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -10,88 +11,52 @@ export default function CommentSection({ videoId }) {
   const [newComment, setNewComment] = useState('');
   const { user } = useAuth();
   const { playClick } = useSound();
+  const { addToast } = useToast();
 
   useEffect(() => {
-    axios.get(`${API}/videos/${videoId}/comments`)
-      .then(res => setComments(res.data))
-      .catch(() => {});
+    axios.get(`${API}/videos/${videoId}/comments`).then(res => setComments(res.data)).catch(() => {});
   }, [videoId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim() || !user) return;
     playClick();
-    if (navigator.vibrate) navigator.vibrate(10);
     try {
-      const res = await axios.post(`${API}/videos/${videoId}/comments`, {
-        user_id: user.id,
-        content: newComment.trim()
-      });
+      const res = await axios.post(`${API}/videos/${videoId}/comments`, { user_id: user.id, content: newComment.trim() });
       setComments(prev => [...prev, res.data]);
       setNewComment('');
+      addToast('Comentário enviado!', 'success');
     } catch (err) {
-      alert('Erro ao comentar.');
+      addToast('Erro ao comentar.', 'error');
     }
   };
 
+  const toggleLikeComment = (commentId) => {
+    // Simulação de like no comentário (local)
+    setComments(prev => prev.map(c => c.id === commentId ? { ...c, liked: !c.liked } : c));
+  };
+
   return (
-    <div style={{ marginTop: 32 }}>
-      <h3 style={{ marginBottom: 20, fontSize: '1.2rem', fontWeight: 600 }}>
-        Comentários ({comments.length})
-      </h3>
+    <div style={{ marginTop: 24 }}>
+      <h3>Comentários ({comments.length})</h3>
       {user && (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-          <input
-            className="form-input"
-            placeholder="Adicione um comentário..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            style={{
-              flex: 1, padding: '10px 16px', background: '#121212', border: '1px solid #2a2a2a',
-              borderRadius: 24, color: '#fff', fontSize: '0.9rem', outline: 'none',
-            }}
-          />
-          <button type="submit" style={{
-            background: '#00e676', color: '#000', border: 'none', borderRadius: 24,
-            padding: '8px 20px', fontWeight: 600, cursor: 'pointer',
-          }}>
-            Enviar
-          </button>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <input className="search-input" placeholder="Adicionar comentário..." value={newComment} onChange={e => setNewComment(e.target.value)} style={{ flex: 1, borderRadius: 20 }} />
+          <button type="submit" className="btn btn-primary">Enviar</button>
         </form>
       )}
-      {comments.length === 0 ? (
-        <p style={{ color: '#888' }}>Seja o primeiro a comentar.</p>
-      ) : (
-        comments.map(comment => (
-          <div key={comment.id} style={{
-            display: 'flex', gap: 12, marginBottom: 20,
-            animation: 'fadeInUp 0.3s ease both',
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%', background: '#202020',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#aaa', fontSize: '0.8rem', flexShrink: 0,
-            }}>
-              {comment.profiles?.avatar_url ? (
-                <img src={comment.profiles.avatar_url} style={{ width: '100%', height: '100%', borderRadius: '50%' }} alt="" />
-              ) : (
-                (comment.profiles?.username || 'U')[0].toUpperCase()
-              )}
-            </div>
-            <div>
-              <strong style={{ fontSize: '0.9rem', marginRight: 8 }}>
-                {comment.profiles?.username || 'Usuário'}
-              </strong>
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                {new Date(comment.created_at).toLocaleDateString('pt-BR')}
-              </span>
-              <p style={{ margin: '4px 0 0', fontSize: '0.9rem', lineHeight: 1.4 }}>
-                {comment.content}
-              </p>
-            </div>
+      {comments.map(c => (
+        <div key={c.id} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#252525', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <strong style={{ fontSize: '0.9rem' }}>{c.profiles?.username || 'Usuário'}</strong>
+            <p style={{ margin: '2px 0 4px', fontSize: '0.9rem' }}>{c.content}</p>
+            <button onClick={() => toggleLikeComment(c.id)} style={{ background: 'none', border: 'none', color: c.liked ? '#00e676' : '#888', cursor: 'pointer', fontSize: '0.8rem' }}>
+              {c.liked ? '👍' : '👍🏾'} {c.likes || 0}
+            </button>
           </div>
-        ))
-      )}
+        </div>
+      ))}
     </div>
   );
 }
