@@ -1,20 +1,43 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
+import Watch from './pages/Watch';
+import Upload from './pages/Upload';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Upload from './pages/Upload';
-import Watch from './pages/Watch';
+import Channel from './pages/Channel';
+import Subscriptions from './pages/Subscriptions';
+import NotFound from './pages/NotFound';
 
 export default function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/upload" element={<Upload />} />
-        <Route path="/watch/:id" element={<Watch />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="app-container">
+          <Navbar toggleSidebar={toggleSidebar} />
+          <div className="main-layout">
+            <Sidebar open={sidebarOpen} />
+            <main className="content" onClick={() => sidebarOpen && setSidebarOpen(false)}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/watch/:id" element={<Watch />} />
+                <Route path="/upload" element={<Upload />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/channel/:id" element={<Channel />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
