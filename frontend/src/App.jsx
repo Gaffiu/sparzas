@@ -6,18 +6,9 @@ import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
 import MobileTabBar from './components/MobileTabBar';
 import UserMenu from './components/UserMenu';
-import {
-  IconSearch,
-  IconMenu,
-  IconUpload,
-  IconHome,
-  IconSubscriptions,
-  IconChannel,
-  IconLiked,
-  IconHistory
-} from './components/Icons';
+import { IconSearch, IconMenu, IconUpload } from './components/Icons';
+import './App.css';
 
-// Lazy loading das páginas
 const Home = lazy(() => import('./pages/Home'));
 const Watch = lazy(() => import('./pages/Watch'));
 const Upload = lazy(() => import('./pages/Upload'));
@@ -29,25 +20,18 @@ const History = lazy(() => import('./pages/History'));
 const Liked = lazy(() => import('./pages/Liked'));
 const Studio = lazy(() => import('./pages/Studio'));
 const WatchLater = lazy(() => import('./pages/WatchLater'));
+const Explore = lazy(() => import('./pages/Explore'));
+const Playlists = lazy(() => import('./pages/Playlists'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Placeholder de carregamento
 function PageLoader() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-      <div style={{
-        width: 36, height: 36,
-        border: '4px solid #333',
-        borderTop: '4px solid #00e676',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite'
-      }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className="page-loader">
+      <div className="spinner" />
     </div>
   );
 }
 
-// Wrapper para transições animadas
 function AnimatedPage({ children }) {
   return <div className="page page-active">{children}</div>;
 }
@@ -55,7 +39,7 @@ function AnimatedPage({ children }) {
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { playClick } = useSound();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -74,8 +58,7 @@ function Layout() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
-      vibrate();
-      playClick();
+      vibrate(); playClick();
       navigate(`/?search=${encodeURIComponent(search.trim())}`);
     }
   };
@@ -83,113 +66,48 @@ function Layout() {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#050505' }}>
-      {/* Navbar vidro fixa */}
-      <nav style={{
-        height: 64,
-        background: 'rgba(12,12,12,0.9)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 200,
-        gap: 16
-      }}>
-        {/* Menu hamburguer (mobile) */}
+    <div className="app-shell">
+      <nav className="navbar">
         {isMobile && (
-          <button
-            onClick={() => { setSidebarOpen(!sidebarOpen); vibrate(); playClick(); }}
-            style={{ background: 'none', border: 'none', color: '#fff', padding: 8 }}
-          >
+          <button className="nav-icon-btn" onClick={() => { setSidebarOpen(!sidebarOpen); vibrate(); playClick(); }}>
             <IconMenu />
           </button>
         )}
-
-        {/* Logo e nome */}
-        <Link to="/" onClick={vibrate} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+        <Link to="/" className="logo-link" onClick={vibrate}>
           <Logo />
-          <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#00e676', letterSpacing: -0.5 }}>SPARZAS</span>
+          <span className="logo-text">SPARZAS</span>
         </Link>
-
-        {/* Busca (desktop) */}
         {!isMobile && (
-          <form onSubmit={handleSearch} style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <input
-              type="text"
-              placeholder="Pesquisar vídeos..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{
-                width: '100%', maxWidth: 480,
-                padding: '10px 18px', background: '#121212',
-                border: '1px solid #2a2a2a', borderRadius: '24px 0 0 24px',
-                color: '#fff', fontSize: '0.95rem', outline: 'none',
-              }}
-            />
-            <button type="submit" style={{
-              background: '#1a1a1a', border: '1px solid #2a2a2a', borderLeft: 'none',
-              borderRadius: '0 24px 24px 0', padding: '0 20px', color: '#fff', cursor: 'pointer',
-            }}>
-              <IconSearch />
-            </button>
+          <form className="search-form" onSubmit={handleSearch}>
+            <input type="text" placeholder="Pesquisar vídeos..." value={search} onChange={e => setSearch(e.target.value)} className="search-input" />
+            <button type="submit" className="search-btn"><IconSearch /></button>
           </form>
         )}
-
-        {/* Ações do usuário */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="nav-actions">
           {user ? (
             <>
               {!isMobile && (
-                <Link to="/upload" onClick={() => { vibrate(); playClick(); }} style={{
-                  color: '#fff', textDecoration: 'none', fontWeight: 500,
-                  fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 6,
-                }}>
+                <Link to="/upload" className="upload-link" onClick={() => { vibrate(); playClick(); }}>
                   <IconUpload size={20} /> Publicar
                 </Link>
               )}
               <UserMenu />
             </>
           ) : (
-            <Link to="/login" onClick={() => { vibrate(); playClick(); }} style={{
-              background: '#00e676', color: '#000', padding: '8px 22px', borderRadius: 24,
-              fontWeight: 600, textDecoration: 'none', fontSize: '0.95rem',
-            }}>
-              Entrar
-            </Link>
+            <Link to="/login" className="login-btn" onClick={() => { vibrate(); playClick(); }}>Entrar</Link>
           )}
         </div>
       </nav>
 
-      {/* Conteúdo principal */}
-      <div style={{ display: 'flex', flex: 1 }}>
-        {/* Sidebar (desktop fixo, mobile overlay) */}
+      <div className="main-wrapper">
         {!isMobile && <Sidebar open={sidebarOpen} close={closeSidebar} fixed={!isMobile} />}
-        {isMobile && sidebarOpen && (
-          <div style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 140
-          }} onClick={closeSidebar} />
-        )}
+        {isMobile && sidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
         {isMobile && (
-          <div style={{
-            position: 'fixed', top: 64, left: 0, width: 260,
-            height: 'calc(100vh - 64px)', background: '#0c0c0c', zIndex: 150,
-            transform: sidebarOpen ? 'translateX(0)' : 'translateX(-280px)',
-            transition: 'transform 0.3s ease',
-            borderRight: '1px solid rgba(255,255,255,0.04)',
-          }}>
+          <div className={`sidebar-mobile ${sidebarOpen ? 'open' : ''}`}>
             <Sidebar open={true} close={closeSidebar} fixed={false} />
           </div>
         )}
-
-        {/* Área de conteúdo */}
-        <main style={{
-          flex: 1, padding: '28px 24px', overflowY: 'auto',
-          paddingBottom: isMobile ? 80 : 28
-        }} onClick={() => sidebarOpen && closeSidebar()}>
+        <main className="main-content" style={{ paddingBottom: isMobile ? 80 : 28 }} onClick={() => sidebarOpen && closeSidebar()}>
           <Suspense fallback={<PageLoader />}>
             <AnimatedPage key={location.pathname}>
               <Routes location={location}>
@@ -204,47 +122,15 @@ function Layout() {
                 <Route path="/liked" element={<Liked />} />
                 <Route path="/studio" element={<Studio />} />
                 <Route path="/watch-later" element={<WatchLater />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/playlists" element={<Playlists />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnimatedPage>
           </Suspense>
         </main>
       </div>
-
-      {/* Barra inferior mobile */}
       {isMobile && <MobileTabBar />}
-
-      {/* Estilos globais e animações */}
-      <style>{`
-        @keyframes neonPulse {
-          0%,100% { filter: drop-shadow(0 0 6px #00e676); }
-          50% { filter: drop-shadow(0 0 18px #00e676) drop-shadow(0 0 36px #1de9b6); }
-        }
-        @keyframes fadeInUp {
-          from { opacity:0; transform: translateY(24px); }
-          to { opacity:1; transform: translateY(0); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -400px 0; }
-          100% { background-position: 400px 0; }
-        }
-        body {
-          margin:0;
-          font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          background:#050505;
-          color:#fff;
-          -webkit-font-smoothing:antialiased;
-          overscroll-behavior: none;
-        }
-        a { text-decoration:none; color:inherit; }
-        input, textarea, button { font-family:inherit; }
-        html, body, #root { height: 100%; overflow-x: hidden; }
-        .page {
-          position: relative;
-          width: 100%;
-          min-height: calc(100vh - 64px);
-        }
-      `}</style>
     </div>
   );
 }
