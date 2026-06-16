@@ -104,6 +104,17 @@ router.post('/:id/like', async (req, res) => {
   }
 });
 
+router.get('/search', async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.json([]);
+  const { data, error } = await supabase
+    .from('videos')
+    .select('*, profiles(username, avatar_url)')
+    .ilike('title', `%${q}%`);
+  if (error) return res.status(500).json({ error });
+  res.json(data);
+});
+
 // Contagem de likes de um vídeo
 router.get('/:id/likes/count', async (req, res) => {
   const { id } = req.params;
