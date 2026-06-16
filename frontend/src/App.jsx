@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useSound } from './hooks/useSound';
@@ -14,11 +14,18 @@ import NotFound from './pages/NotFound';
 
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { user, logout } = useAuth();
   const { playClick } = useSound();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const location = useLocation();
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -28,17 +35,21 @@ function Layout() {
     }
   };
 
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
     <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#050505' }}>
-      {/* Navbar vidro */}
+      {/* Navbar vidro fixa */}
       <nav style={{
         height:64, background:'rgba(12,12,12,0.9)', backdropFilter:'blur(16px)', WebkitBackdropFilter:'blur(16px)',
         borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', alignItems:'center', padding:'0 24px',
         position:'sticky', top:0, zIndex:200, gap:16
       }}>
-        <button onClick={() => { setSidebarOpen(!sidebarOpen); playClick(); }} style={{ background:'none', border:'none', color:'#fff', fontSize:22, padding:8 }}>
-          <svg width="22" height="18" viewBox="0 0 22 18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 1h20M1 9h20M1 17h20"/></svg>
-        </button>
+        {isMobile && (
+          <button onClick={() => { setSidebarOpen(!sidebarOpen); playClick(); }} style={{ background:'none', border:'none', color:'#fff', fontSize:22, padding:8 }}>
+            <svg width="22" height="18" viewBox="0 0 22 18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 1h20M1 9h20M1 17h20"/></svg>
+          </button>
+        )}
         <Link to="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
           <Logo />
           <span style={{ fontSize:'1.6rem', fontWeight:800, color:'#00e676', letterSpacing:-0.5 }}>SPARZAS</span>
@@ -74,9 +85,9 @@ function Layout() {
       </nav>
 
       <div style={{ display:'flex', flex:1 }}>
-        <Sidebar open={sidebarOpen} close={() => setSidebarOpen(false)} />
-        <main style={{ flex:1, padding:'28px 24px', overflowY:'auto' }} onClick={() => sidebarOpen && setSidebarOpen(false)}>
-          <div style={{ animation:'fadeInPage 0.4s ease' }} key={location.pathname}>
+        <Sidebar open={sidebarOpen} close={closeSidebar} fixed={!isMobile} />
+        <main style={{ flex:1, padding:'28px 24px', overflowY:'auto' }} onClick={() => isMobile && closeSidebar()}>
+          <div style={{ opacity:1 }} key={location.pathname}>
             <Routes location={location}>
               <Route path="/" element={<Home />} />
               <Route path="/watch/:id" element={<Watch />} />
@@ -90,7 +101,7 @@ function Layout() {
         </main>
       </div>
 
-      {/* Animacoes globais e reset */}
+      {/* Estilos globais (animações e reset) */}
       <style>{`
         @keyframes neonPulse {
           0%,100% { filter: drop-shadow(0 0 6px #00e676); }
@@ -103,10 +114,6 @@ function Layout() {
         @keyframes shimmer {
           0% { background-position: -400px 0; }
           100% { background-position: 400px 0; }
-        }
-        @keyframes fadeInPage {
-          from { opacity:0; }
-          to { opacity:1; }
         }
         @keyframes particleBurst {
           0% { transform: translate(0,0) scale(1); opacity:1; }
@@ -124,9 +131,11 @@ function Layout() {
           background:#050505;
           color:#fff;
           -webkit-font-smoothing:antialiased;
+          overscroll-behavior: none;
         }
         a { text-decoration:none; color:inherit; }
         input, textarea, button { font-family:inherit; }
+        html, body, #root { height: 100%; overflow-x: hidden; }
       `}</style>
     </div>
   );
