@@ -72,4 +72,24 @@ router.get('/:id/feed', async (req, res) => {
   res.json(videos);
 });
 
+// Rota para obter vídeos curtidos por um usuário
+router.get('/:id/liked', async (req, res) => {
+  const { id } = req.params;
+  // Busca os likes do usuário
+  const { data: likes, error: likesError } = await supabase
+    .from('likes')
+    .select('video_id')
+    .eq('user_id', id);
+  if (likesError) return res.status(500).json({ error: likesError });
+  const videoIds = likes.map(like => like.video_id);
+  if (videoIds.length === 0) return res.json([]);
+  const { data: videos, error: videosError } = await supabase
+    .from('videos')
+    .select('*, profiles(username, avatar_url)')
+    .in('id', videoIds)
+    .order('created_at', { ascending: false });
+  if (videosError) return res.status(500).json({ error: videosError });
+  res.json(videos);
+});
+
 module.exports = router;
