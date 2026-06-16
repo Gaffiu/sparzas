@@ -5,6 +5,7 @@ import { useSound } from './hooks/useSound';
 import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
 import MobileTabBar from './components/MobileTabBar';
+import { IconSearch, IconMenu, IconUpload } from './components/Icons';
 
 // Lazy loading das páginas
 const Home = lazy(() => import('./pages/Home'));
