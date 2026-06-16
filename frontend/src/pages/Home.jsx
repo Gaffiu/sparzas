@@ -16,23 +16,13 @@ export default function Home() {
     setLoading(true);
     setError('');
     const source = axios.CancelToken.source();
-    const timeout = setTimeout(() => {
-      source.cancel('Timeout: a API demorou muito para responder.');
-    }, 10000); // 10 segundos de timeout
+    const timeout = setTimeout(() => source.cancel('Timeout'), 10000);
 
     const endpoint = search ? `${API}/videos?search=${search}` : `${API}/videos`;
     axios.get(endpoint, { cancelToken: source.token })
-      .then(res => {
-        setVideos(res.data);
-        setError('');
-      })
+      .then(res => setVideos(res.data))
       .catch(err => {
-        if (axios.isCancel(err)) {
-          setError('O servidor está demorando muito. Verifique sua conexão.');
-        } else {
-          setError('Não foi possível carregar os vídeos. Tente novamente mais tarde.');
-        }
-        console.error('Erro na Home:', err);
+        if (!axios.isCancel(err)) setError('Erro ao carregar vídeos.');
       })
       .finally(() => {
         clearTimeout(timeout);
@@ -40,9 +30,7 @@ export default function Home() {
       });
   };
 
-  useEffect(() => {
-    fetchVideos();
-  }, [search]);
+  useEffect(() => { fetchVideos(); }, [search]);
 
   if (loading) {
     return (
@@ -78,9 +66,7 @@ export default function Home() {
         <p style={{ textAlign: 'center', marginTop: 40, color: '#888' }}>Nenhum vídeo encontrado.</p>
       ) : (
         <div className="video-grid">
-          {videos.map((v, i) => (
-            <VideoCard key={v.id} video={v} index={i} />
-          ))}
+          {videos.map((v, i) => <VideoCard key={v.id} video={v} index={i} />)}
         </div>
       )}
     </div>
