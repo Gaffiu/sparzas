@@ -87,6 +87,27 @@ export default function Watch() {
     }
   };
 
+  const saveToWatchLater = () => {
+    if (!video) return;
+    playClick();
+    if (navigator.vibrate) navigator.vibrate(10);
+    const list = JSON.parse(localStorage.getItem('sparzas_watch_later') || '[]');
+    if (list.some(v => v.id === video.id)) {
+      alert('Este vídeo já está na lista "Assistir mais tarde".');
+      return;
+    }
+    list.push({
+      id: video.id,
+      title: video.title,
+      thumbnail_url: video.thumbnail_url,
+      profiles: video.profiles,
+      views: video.views,
+      created_at: video.created_at,
+    });
+    localStorage.setItem('sparzas_watch_later', JSON.stringify(list));
+    alert('Vídeo salvo em "Assistir mais tarde"!');
+  };
+
   const requestPiP = () => {
     if (videoRef.current?.webkitSetPresentationMode) {
       videoRef.current.webkitSetPresentationMode('picture-in-picture');
@@ -177,6 +198,12 @@ export default function Watch() {
             borderRadius:24, fontWeight:500, fontSize:'0.9rem', cursor:'pointer', display:'flex', alignItems:'center', gap:6,
           }}>
             <IconShare size={16} /> Compartilhar
+          </button>
+          <button onClick={saveToWatchLater} style={{
+            background:'transparent', border:'1px solid #333', color:'#fff', padding:'8px 20px',
+            borderRadius:24, fontWeight:500, fontSize:'0.9rem', cursor:'pointer',
+          }}>
+            + Salvar
           </button>
           {particles.map(p => (
             <span key={p.id} style={{
