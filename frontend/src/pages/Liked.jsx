@@ -33,7 +33,7 @@ export default function Liked() {
 
   return (
     <div>
-      <h2 style={{ marginBottom:24, fontSize:'1.5rem' }}>👍 Vídeos curtidos</h2>
+      <h2 style={{ marginBottom:24, fontSize:'1.5rem' }}>Vídeos curtidos</h2>
       {videos.length === 0 ? (
         <div style={{ textAlign:'center', marginTop:60, color:'#888' }}>
           <p>Você ainda não curtiu nenhum vídeo.</p>
