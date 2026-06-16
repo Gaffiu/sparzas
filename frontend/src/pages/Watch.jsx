@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../hooks/useSound';
 import SubscribeButton from '../components/SubscribeButton';
 import CommentSection from '../components/CommentSection';
+import { IconLike, IconShare } from '../components/Icons';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -17,16 +18,16 @@ export default function Watch() {
   const [likeCount, setLikeCount] = useState(0);
   const [particles, setParticles] = useState([]);
   const videoRef = useRef(null);
+  const touchStartX = useRef(0);
 
   useEffect(() => {
-    axios.get(`${API}/videos/${id}`).then(res => {
-      setVideo(res.data);
-    }).catch(() => {});
+    // Buscar dados do vídeo
+    axios.get(`${API}/videos/${id}`).then(res => setVideo(res.data)).catch(() => {});
     // Buscar contagem de likes
     axios.get(`${API}/videos/${id}/likes/count`).then(res => setLikeCount(res.data.count));
   }, [id]);
 
-  // Bloquear rotação e restaurar ao sair
+  // Bloquear rotação (mobile) e restaurar ao sair
   useEffect(() => {
     if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('landscape').catch(() => {});
@@ -34,18 +35,26 @@ export default function Watch() {
     }
   }, []);
 
-  // Gestos no player
-  const touchStartX = useRef(0);
-  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  // Gestos no player: deslizar horizontalmente para avançar/retroceder
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
   const handleTouchEnd = (e) => {
     const diff = e.changedTouches[0].clientX - touchStartX.current;
     if (Math.abs(diff) > 50 && videoRef.current) {
-      if (diff > 0) videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
-      else videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 10);
+      if (diff > 0) {
+        videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+      } else {
+        videoRef.current.currentTime = Math.min(
+          videoRef.current.duration,
+          videoRef.current.currentTime + 10
+        );
+      }
       if (navigator.vibrate) navigator.vibrate(15);
     }
   };
 
+  // Picture-in-Picture
   const requestPiP = () => {
     if (videoRef.current?.webkitSetPresentationMode) {
       videoRef.current.webkitSetPresentationMode('picture-in-picture');
@@ -54,12 +63,14 @@ export default function Watch() {
     }
   };
 
+  // Curtir vídeo
   const toggleLike = () => {
     if (!user) return;
     playLike();
     if (navigator.vibrate) navigator.vibrate(15);
     setLiked(prev => !prev);
     setLikeCount(prev => liked ? prev - 1 : prev + 1);
+    // Partículas de like
     const newParticles = Array.from({ length: 14 }, (_, i) => ({
       id: Math.random(),
       angle: (i / 14) * 360,
@@ -67,19 +78,24 @@ export default function Watch() {
     }));
     setParticles(newParticles);
     setTimeout(() => setParticles([]), 600);
-    // Chamar API de like
+    // API de like
     axios.post(`${API}/videos/${id}/like`, { user_id: user.id }).catch(() => {});
   };
 
+  // Compartilhar (nativo ou fallback)
   const handleShare = () => {
+    playClick();
     if (navigator.share) {
-      navigator.share({ title: video?.title, url: window.location.href }).catch(() => {});
+      navigator.share({
+        title: video?.title || 'Vídeo no SPARZAS',
+        url: window.location.href,
+      }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href).then(() => alert('Link copiado!'));
     }
   };
 
-  // Salvar no histórico
+  // Salvar no histórico local
   useEffect(() => {
     if (!video) return;
     const history = JSON.parse(localStorage.getItem('sparzas_history') || '[]');
@@ -95,68 +111,131 @@ export default function Watch() {
     localStorage.setItem('sparzas_history', JSON.stringify(filtered.slice(0, 50)));
   }, [video]);
 
-  if (!video) return <div style={{ textAlign:'center', padding:60, color:'#aaa' }}>Carregando video...</div>;
+  if (!video) {
+    return (
+      <div style={{ textAlign: 'center', padding: 60, color: '#aaa' }}>
+        Carregando vídeo...
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth:1000, margin:'0 auto' }}>
+    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
       {/* Player */}
-      <div style={{ borderRadius:18, overflow:'hidden', background:'#000', marginBottom:24, boxShadow:'0 8px 32px rgba(0,0,0,0.6)', position:'relative' }}>
+      <div style={{
+        borderRadius: 18, overflow: 'hidden', background: '#000',
+        marginBottom: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', position: 'relative',
+      }}>
         <video
           ref={videoRef}
           controls
           src={video.video_url}
-          style={{ width:'100%', display:'block' }}
+          style={{ width: '100%', display: 'block' }}
           poster={video.thumbnail_url || undefined}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         />
-        <button onClick={requestPiP} style={{
-          position:'absolute', top:16, right:16, background:'rgba(0,0,0,0.6)', color:'#fff', border:'none',
-          borderRadius:8, padding:'4px 10px', fontSize:'0.9rem', cursor:'pointer',
-        }}>PiP</button>
+        <button
+          onClick={requestPiP}
+          style={{
+            position: 'absolute', top: 16, right: 16,
+            background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
+            borderRadius: 8, padding: '4px 10px', fontSize: '0.9rem', cursor: 'pointer',
+          }}
+        >
+          PiP
+        </button>
       </div>
 
-      <h1 style={{ fontSize:'1.8rem', fontWeight:700, marginBottom:16 }}>{video.title}</h1>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16, marginBottom:24 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-          <Link to={`/channel/${video.user_id}`} style={{ display:'flex', alignItems:'center', gap:14, textDecoration:'none', color:'inherit' }}>
-            <div style={{ width:44, height:44, borderRadius:'50%', background:'#252525' }} />
+      {/* Título */}
+      <h1 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: 16, lineHeight: 1.3 }}>
+        {video.title}
+      </h1>
+
+      {/* Canal e ações */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        flexWrap: 'wrap', gap: 16, marginBottom: 24,
+      }}>
+        {/* Info do canal */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <Link
+            to={`/channel/${video.user_id}`}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 14,
+              textDecoration: 'none', color: 'inherit',
+            }}
+          >
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: '#252525',
+            }} />
             <div>
-              <strong>{video.profiles?.username || 'SPARZAS'}</strong>
-              <p style={{ fontSize:'0.8rem', color:'#888', margin:0 }}>{video.views || 0} visualizacoes</p>
+              <strong style={{ fontSize: '1rem' }}>
+                {video.profiles?.username || 'SPARZAS'}
+              </strong>
+              <p style={{ fontSize: '0.8rem', color: '#888', margin: 0 }}>
+                {video.views || 0} visualizações
+              </p>
             </div>
           </Link>
-          {user && user.id !== video.user_id && <SubscribeButton channelId={video.user_id} />}
+          {user && user.id !== video.user_id && (
+            <SubscribeButton channelId={video.user_id} />
+          )}
         </div>
-        <div style={{ display:'flex', gap:10, position:'relative' }}>
-          <button onClick={toggleLike} style={{
-            background: liked ? '#00e676' : 'transparent',
-            border: liked ? 'none' : '1px solid #333',
-            color: liked ? '#000' : '#fff',
-            padding:'8px 20px', borderRadius:24, fontWeight:600, fontSize:'0.9rem',
-            cursor:'pointer', transition:'0.2s', display:'flex', alignItems:'center', gap:6,
-          }}>
-            👍 {likeCount} {liked ? 'Curtido' : 'Curtir'}
+
+        {/* Botões de ação */}
+        <div style={{ display: 'flex', gap: 10, position: 'relative' }}>
+          <button
+            onClick={toggleLike}
+            style={{
+              background: liked ? '#00e676' : 'transparent',
+              border: liked ? 'none' : '1px solid #333',
+              color: liked ? '#000' : '#fff',
+              padding: '8px 20px', borderRadius: 24, fontWeight: 600,
+              fontSize: '0.9rem', cursor: 'pointer', transition: '0.2s',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            <IconLike size={16} color={liked ? '#000' : '#fff'} filled={liked} />
+            {likeCount} {liked ? 'Curtido' : 'Curtir'}
           </button>
-          <button onClick={handleShare} style={{
-            background:'transparent', border:'1px solid #333', color:'#fff',
-            padding:'8px 20px', borderRadius:24, fontWeight:500, fontSize:'0.9rem', cursor:'pointer',
-          }}>Compartilhar</button>
+          <button
+            onClick={handleShare}
+            style={{
+              background: 'transparent', border: '1px solid #333', color: '#fff',
+              padding: '8px 20px', borderRadius: 24, fontWeight: 500,
+              fontSize: '0.9rem', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            <IconShare size={16} /> Compartilhar
+          </button>
+
+          {/* Partículas de like */}
           {particles.map(p => (
-            <span key={p.id} style={{
-              position:'absolute', left:'calc(50% + 30px)', top:'50%',
-              width:6, height:6, borderRadius:'50%', background:'#00e676',
-              animation:'particleBurst 0.6s ease-out forwards',
-              '--angle': `${p.angle}deg`, '--dist': `${p.dist}px`,
-            }} />
+            <span
+              key={p.id}
+              style={{
+                position: 'absolute', left: 'calc(50% + 30px)', top: '50%',
+                width: 6, height: 6, borderRadius: '50%', background: '#00e676',
+                animation: 'particleBurst 0.6s ease-out forwards',
+                '--angle': `${p.angle}deg`, '--dist': `${p.dist}px`,
+              } as React.CSSProperties}
+            />
           ))}
         </div>
       </div>
 
-      <div style={{ background:'#0f0f0f', padding:20, borderRadius:16, marginBottom:32, whiteSpace:'pre-wrap', lineHeight:1.6 }}>
-        {video.description || 'Sem descricao.'}
+      {/* Descrição */}
+      <div style={{
+        background: '#0f0f0f', padding: 20, borderRadius: 16,
+        marginBottom: 32, whiteSpace: 'pre-wrap', lineHeight: 1.6,
+      }}>
+        {video.description || 'Sem descrição.'}
       </div>
 
+      {/* Comentários */}
       <CommentSection videoId={video.id} />
     </div>
   );
