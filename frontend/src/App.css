@@ -8,7 +8,6 @@
   --safe-bottom: env(safe-area-inset-bottom);
 }
 
-/* Reset nativo */
 * {
   -webkit-tap-highlight-color: transparent;
   -webkit-focus-ring-color: transparent;
@@ -26,13 +25,11 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Scroll nativo apenas vertical */
 html, body, #root {
   height: 100%;
   overflow-x: hidden;
 }
 
-/* Navbar fixa */
 .navbar {
   height: 56px;
   background: rgba(12,12,12,0.95);
@@ -48,7 +45,6 @@ html, body, #root {
   gap: 8px;
 }
 
-/* Logo */
 .logo-link {
   display: flex;
   align-items: center;
@@ -63,7 +59,6 @@ html, body, #root {
   letter-spacing: -0.5px;
 }
 
-/* Campo de busca */
 .search-form {
   flex: 1;
   display: flex;
@@ -92,7 +87,6 @@ html, body, #root {
   height: 36px;
 }
 
-/* Ações da navbar */
 .nav-actions {
   display: flex;
   align-items: center;
@@ -118,7 +112,6 @@ html, body, #root {
   font-size: 0.9rem;
 }
 
-/* Layout principal */
 .main-wrapper {
   display: flex;
   flex: 1;
@@ -132,7 +125,6 @@ html, body, #root {
   will-change: scroll-position;
 }
 
-/* Sidebar */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -156,28 +148,6 @@ html, body, #root {
   transform: translateX(0);
 }
 
-/* Swipe hint */
-.main-content::before {
-  content: '';
-  position: fixed;
-  left: 0;
-  top: 50%;
-  width: 6px;
-  height: 40px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 0 4px 4px 0;
-  z-index: 100;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-@media (max-width: 767px) {
-  .main-content::before {
-    opacity: 1;
-  }
-}
-
-/* Barra inferior mobile */
 .mobile-tab-bar {
   position: fixed;
   bottom: 0;
@@ -214,7 +184,6 @@ html, body, #root {
   color: var(--green-neon);
 }
 
-/* Cartões de vídeo */
 .video-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -273,7 +242,6 @@ html, body, #root {
   margin: 0;
 }
 
-/* Player nativo */
 .player-container {
   background: #000;
   border-radius: var(--radius-md);
@@ -361,7 +329,6 @@ html, body, #root {
   border-color: transparent;
 }
 
-/* Sheet (perfil) */
 .sheet-overlay {
   position: fixed;
   inset: 0;
@@ -459,7 +426,6 @@ html, body, #root {
   margin-top: 8px;
 }
 
-/* Botões globais */
 .btn {
   padding: 10px 20px;
   border-radius: 24px;
@@ -487,7 +453,6 @@ html, body, #root {
   color: #fff;
 }
 
-/* Animações */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -502,15 +467,4 @@ html, body, #root {
   border-top-color: var(--green-neon);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
-}
-
-/* Swipe para voltar (simulado com botão nativo) */
-.swipe-back-area {
-  position: fixed;
-  left: 0;
-  top: 50%;
-  width: 20px;
-  height: 80px;
-  z-index: 250;
-  pointer-events: none;
 }
