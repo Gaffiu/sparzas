@@ -1,14 +1,20 @@
 export default function Logo() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <path d="M16 2L4 12V26L16 30L28 26V12L16 2Z" fill="#00c853" />
-        <path d="M16 8L10 13V22L16 26L22 22V13L16 8Z" fill="#0a0a0a" />
-        <path d="M18 14L16 12L14 14V20L16 22L18 20V14Z" fill="#00c853" />
-      </svg>
-      <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#00c853' }}>
-        SPARZAS
-      </span>
-    </div>
+    <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <path d="M20 2L6 12V30L20 38L34 30V12L20 2Z" fill="#0f0f0f" stroke="#00e676" strokeWidth="2" filter="url(#glow)"/>
+      <path d="M20 10L12 17V27L20 32L28 27V17L20 10Z" fill="#00e676" opacity="0.8"/>
+      <text x="20" y="25" textAnchor="middle" fill="#0f0f0f" fontSize="10" fontWeight="900" fontFamily="Inter">S</text>
+      <line x1="20" y1="30" x2="20" y2="36" stroke="#00e676" strokeWidth="2" strokeLinecap="round" filter="url(#glow)"/>
+      <line x1="14" y1="34" x2="26" y2="34" stroke="#00e676" strokeWidth="2" strokeLinecap="round" filter="url(#glow)"/>
+    </svg>
   );
 }
