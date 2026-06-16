@@ -45,3 +45,55 @@ body {
 @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 .page { position: relative; width: 100%; min-height: calc(100vh - 64px); animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* Bottom Sheet */
+.sheet-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.sheet-container {
+  width: 100%; max-width: 480px; background: #1a1a1a; border-radius: 20px 20px 0 0;
+  padding: 20px; animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.sheet-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+}
+.sheet-avatar {
+  width: 48px; height: 48px; border-radius: 50%; background: #00e676;
+  color: #000; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.2rem;
+}
+.sheet-email { color: #fff; margin: 0; font-weight: 500; }
+.sheet-channel-btn { background: none; border: 1px solid #00e676; color: #00e676; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-top: 4px; }
+.sheet-options { display: flex; flex-direction: column; gap: 8px; }
+.sheet-option { background: none; border: none; color: #fff; padding: 12px 0; text-align: left; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+.sheet-logout { background: none; border: none; color: #ff6b6b; padding: 12px 0; font-size: 1rem; cursor: pointer; width: 100%; text-align: left; }
+.sheet-cancel { background: none; border: none; color: #888; padding: 12px 0; font-size: 1rem; cursor: pointer; width: 100%; text-align: left; }
+/* Mobile tab bar avatar */
+.profile-avatar-small {
+  width: 24px; height: 24px; border-radius: 50%; background: #00e676;
+  color: #000; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.8rem;
+}
+/* Community posts */
+.community-post {
+  background: #0f0f0f; border-radius: 12px; padding: 16px; margin-bottom: 16px;
+}
+.poll { display: flex; gap: 8px; margin: 8px 0; }
+.poll-option { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 6px 16px; border-radius: 20px; cursor: pointer; }
+/* Messages */
+.message-preview {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.msg-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: #333;
+  display: flex; align-items: center; justify-content: center; font-weight: 600;
+}
+/* Chapter markers */
+.chapter-marker {
+  position: absolute; top: 0; height: 100%; width: 4px; background: #00e676;
+  transform: translateX(-50%); cursor: pointer;
+}
