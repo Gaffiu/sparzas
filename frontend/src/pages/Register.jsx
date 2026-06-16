@@ -9,7 +9,7 @@ export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await register(email, password);
@@ -20,15 +20,17 @@ export default function Register() {
   };
 
   return (
-    <div className="fadeIn" style={{ maxWidth: 400, margin: '40px auto', padding: 20 }}>
-      <h1>Criar conta</h1>
-      <form onSubmit={handleRegister}>
-        <div className="form-group"><input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required /></div>
-        <div className="form-group"><input type="password" placeholder="Senha (mín. 6 caracteres)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} /></div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" className="btn-primary" style={{ width: '100%' }}>Registrar</button>
+    <div className="fade-in" style={{ maxWidth: 420, margin: '60px auto', padding: 32, background: 'var(--bg-primary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
+      <h1 style={{ textAlign: 'center', marginBottom: 32 }}>Criar conta</h1>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <input className="form-input" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+        <input className="form-input" type="password" placeholder="Senha (mín. 6 caracteres)" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+        {error && <p style={{ color: 'salmon' }}>{error}</p>}
+        <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '14px' }}>Registrar</button>
       </form>
-      <p style={{ marginTop: 15 }}>Já tem conta? <Link to="/login">Faça login</Link></p>
+      <p style={{ textAlign: 'center', marginTop: 20, color: 'var(--text-muted)' }}>
+        Já tem conta? <Link to="/login" style={{ color: 'var(--green-neon)' }}>Faça login</Link>
+      </p>
     </div>
   );
 }
