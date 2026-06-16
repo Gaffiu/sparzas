@@ -144,6 +144,9 @@ function Layout() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/channel/:id" element={<Channel />} />
                 <Route path="*" element={<NotFound />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
+<Route path="/history" element={<History />} />
+<Route path="/liked" element={<Liked />} />
               </Routes>
             </AnimatedPage>
           </Suspense>
