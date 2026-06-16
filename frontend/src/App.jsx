@@ -15,6 +15,10 @@ const Register = lazy(() => import('./pages/Register'));
 const Channel = lazy(() => import('./pages/Channel'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+const Subscriptions = lazy(() => import('./pages/Subscriptions'));
+const History = lazy(() => import('./pages/History'));
+const Liked = lazy(() => import('./pages/Liked'));
+
 // Placeholder de carregamento
 function PageLoader() {
   return (
