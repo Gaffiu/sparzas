@@ -79,3 +79,7 @@ html, body, #root { height: 100%; overflow-x: hidden; }
 .spinner { width: 28px; height: 28px; border: 3px solid #333; border-top-color: var(--green-neon); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
