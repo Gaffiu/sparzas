@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import axios from 'axios';
 import { useSound } from '../hooks/useSound';
+import { useToast } from '../contexts/ToastContext';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -15,30 +16,18 @@ export default function Upload() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [permission, setPermission] = useState(false);
   const { playUpload } = useSound();
+  const { addToast } = useToast();
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    if (!user) navigate('/login');
-  }, [user, navigate]);
+  if (!user) { navigate('/login'); return null; }
 
   const requestMedia = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      stream.getTracks().forEach(track => track.stop());
-      setPermission(true);
-      fileInputRef.current?.click();
-    } catch {
-      setPermission(true); // fallback: permite abrir galeria mesmo sem câmera
-      fileInputRef.current?.click();
-    }
+    try { const stream = await navigator.mediaDevices.getUserMedia({ video: true }); stream.getTracks().forEach(t => t.stop()); } catch {}
+    fileInputRef.current?.click();
   };
 
-  const handleFile = (e) => {
-    const f = e.target.files[0];
-    if (f) setFile(f);
-  };
+  const handleFile = (e) => { if (e.target.files[0]) setFile(e.target.files[0]); };
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -54,16 +43,11 @@ export default function Upload() {
       const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
       clearInterval(interval);
       setProgress(100);
-      await axios.post(`${API}/videos`, {
-        user_id: user.id,
-        title: title.trim(),
-        description: desc.trim(),
-        video_url: publicUrl,
-        thumbnail_url: 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS'
-      });
+      await axios.post(`${API}/videos`, { user_id: user.id, title: title.trim(), description: desc.trim(), video_url: publicUrl, thumbnail_url: 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS' });
+      addToast('Vídeo publicado com sucesso!', 'success');
       navigate('/');
     } catch (err) {
-      alert('Erro ao enviar vídeo: ' + err.message);
+      addToast('Erro ao enviar vídeo: ' + err.message, 'error');
     } finally {
       setUploading(false);
     }
@@ -80,9 +64,7 @@ export default function Upload() {
         <input className="search-input" placeholder="Título" value={title} onChange={e => setTitle(e.target.value)} required />
         <textarea className="search-input" placeholder="Descrição" value={desc} onChange={e => setDesc(e.target.value)} rows={3} style={{ resize: 'vertical' }} />
         {uploading && <div style={{ height: 4, background: '#333', borderRadius: 2 }}><div style={{ width: `${progress}%`, height: '100%', background: '#00e676' }} /></div>}
-        <button type="submit" disabled={uploading || !file} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
-          {uploading ? 'Enviando...' : 'Publicar'}
-        </button>
+        <button type="submit" disabled={uploading || !file} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>{uploading ? 'Enviando...' : 'Publicar'}</button>
       </form>
     </div>
   );
