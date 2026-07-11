@@ -1,0 +1,63 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-12
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build React app
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Install Capacitor CLI
+        run: npm install -g @capacitor/cli
+
+      - name: Initialize Capacitor
+        run: |
+          cd frontend
+          npx cap init SPARZAS com.sparzas.play --web-dir=dist
+
+      - name: Add iOS platform
+        run: |
+          cd frontend
+          npx cap add ios
+
+      - name: Sync Capacitor
+        run: |
+          cd frontend
+          npx cap sync ios
+
+      - name: Build iOS app
+        run: |
+          cd frontend/ios
+          xcodebuild -workspace App/App.xcworkspace -scheme App -sdk iphoneos -configuration Release archive -archivePath $PWD/build/App.xcarchive CODE_SIGNING_ALLOWED=NO
+
+      - name: Generate IPA
+        run: |
+          mkdir -p Payload
+          cp -r frontend/ios/build/App.xcarchive/Products/Applications/App.app Payload/
+          zip -r SparzasPlay.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: SparzasPlay.ipa
+          path: SparzasPlay.ipa
