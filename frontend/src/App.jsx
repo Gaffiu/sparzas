@@ -18,6 +18,7 @@ const Shorts = lazy(() => import('./pages/Shorts'));
 const Upload = lazy(() => import('./pages/Upload'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
 const Channel = lazy(() => import('./pages/Channel'));
 const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 const History = lazy(() => import('./pages/History'));
@@ -27,20 +28,21 @@ const WatchLater = lazy(() => import('./pages/WatchLater'));
 const Explore = lazy(() => import('./pages/Explore'));
 const Playlists = lazy(() => import('./pages/Playlists'));
 const Settings = lazy(() => import('./pages/Settings'));
-const Permissions = lazy(() => import('./pages/Permissions'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const Trending = lazy(() => import('./pages/Trending'));
 const Category = lazy(() => import('./pages/Category'));
 const SearchHistory = lazy(() => import('./pages/SearchHistory'));
 const Premium = lazy(() => import('./pages/Premium'));
 const Sessions = lazy(() => import('./pages/Sessions'));
+const BugReport = lazy(() => import('./pages/BugReport'));
+const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false }; }
   static getDerivedStateFromError() { return { hasError: true }; }
   render() {
-    if (this.state.hasError) return <div style={{ textAlign:'center', padding:60, color:'#aaa' }}><h2>Algo deu errado.</h2><button onClick={() => this.setState({ hasError: false })} className="btn btn-primary">Tentar novamente</button></div>;
+    if (this.state.hasError) return <div style={{ textAlign:'center', padding:60, color:'var(--text-muted)' }}><h2>Algo deu errado.</h2><button onClick={() => this.setState({ hasError: false })} className="btn btn-primary">Tentar novamente</button></div>;
     return this.props.children;
   }
 }
@@ -64,6 +66,7 @@ function Layout() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Swipe da borda esquerda para abrir sidebar
   useEffect(() => {
     if (!isMobile) return;
     let touchStartX = 0;
@@ -81,7 +84,7 @@ function Layout() {
     e.preventDefault();
     if (search.trim()) {
       vibrate(); playClick();
-      navigate(`/?search=${encodeURIComponent(search.trim())}`);
+      navigate(`/search?q=${encodeURIComponent(search.trim())}`);
       const history = JSON.parse(localStorage.getItem('sparzas_search_history') || '[]');
       const updated = [search.trim(), ...history.filter(item => item !== search.trim())].slice(0, 20);
       localStorage.setItem('sparzas_search_history', JSON.stringify(updated));
@@ -126,7 +129,7 @@ function Layout() {
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/permissions" element={<Permissions />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/channel/:id" element={<Channel />} />
                 <Route path="/subscriptions" element={<Subscriptions />} />
                 <Route path="/history" element={<History />} />
@@ -139,9 +142,11 @@ function Layout() {
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/trending" element={<Trending />} />
                 <Route path="/category/:slug" element={<Category />} />
+                <Route path="/search" element={<AdvancedSearch />} />
                 <Route path="/search-history" element={<SearchHistory />} />
                 <Route path="/premium" element={<Premium />} />
                 <Route path="/sessions" element={<Sessions />} />
+                <Route path="/bug-report" element={<BugReport />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
