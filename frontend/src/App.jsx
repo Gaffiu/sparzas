@@ -9,9 +9,15 @@ import Logo from './components/Logo';
 import Sidebar from './components/Sidebar';
 import MobileTabBar from './components/MobileTabBar';
 import MiniPlayer from './components/MiniPlayer';
-import { IconSearch, IconMenu, IconUpload, IconNotifications } from './components/Icons';
+import {
+  IconSearch,
+  IconMenu,
+  IconUpload,
+  IconNotifications,
+} from './components/Icons';
 import './App.css';
 
+// Lazy load de todas as páginas
 const Home = lazy(() => import('./pages/Home'));
 const Watch = lazy(() => import('./pages/Watch'));
 const Shorts = lazy(() => import('./pages/Shorts'));
@@ -39,22 +45,43 @@ const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 class ErrorBoundary extends React.Component {
-  constructor(props) { super(props); this.state = { hasError: false }; }
-  static getDerivedStateFromError() { return { hasError: true }; }
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
   render() {
-    if (this.state.hasError) return <div style={{ textAlign:'center', padding:60, color:'var(--text-muted)' }}><h2>Algo deu errado.</h2><button onClick={() => this.setState({ hasError: false })} className="btn btn-primary">Tentar novamente</button></div>;
+    if (this.state.hasError) {
+      return (
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>
+          <h2>Algo deu errado.</h2>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="btn btn-primary"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      );
+    }
     return this.props.children;
   }
 }
 
 function PageLoader() {
-  return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'60vh' }}><div className="spinner" /></div>;
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+      <div className="spinner" />
+    </div>
+  );
 }
 
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const { user } = useAuth();
+  const { user, loading } = useAuth(); // <- loading é usado para proteger rotas
   const { playClick } = useSound();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -70,47 +97,142 @@ function Layout() {
   useEffect(() => {
     if (!isMobile) return;
     let touchStartX = 0;
-    const handleTouchStart = (e) => { touchStartX = e.touches[0].clientX; };
+    const handleTouchStart = (e) => {
+      touchStartX = e.touches[0].clientX;
+    };
     const handleTouchEnd = (e) => {
-      if (touchStartX < 30 && e.changedTouches[0].clientX - touchStartX > 60) setSidebarOpen(true);
+      const diff = e.changedTouches[0].clientX - touchStartX;
+      if (touchStartX < 30 && diff > 60) {
+        setSidebarOpen(true);
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
     };
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchend', handleTouchEnd, { passive: true });
-    return () => { window.removeEventListener('touchstart', handleTouchStart); window.removeEventListener('touchend', handleTouchEnd); };
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
   }, [isMobile]);
 
-  const vibrate = () => { if (navigator.vibrate) navigator.vibrate(10); };
+  // Bloqueia scroll do body quando sidebar mobile estiver aberta
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [isMobile, sidebarOpen]);
+
+  const vibrate = () => {
+    if (navigator.vibrate) navigator.vibrate(10);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
-      vibrate(); playClick();
+      vibrate();
+      playClick();
       navigate(`/search?q=${encodeURIComponent(search.trim())}`);
       const history = JSON.parse(localStorage.getItem('sparzas_search_history') || '[]');
-      const updated = [search.trim(), ...history.filter(item => item !== search.trim())].slice(0, 20);
+      const updated = [search.trim(), ...history.filter((item) => item !== search.trim())].slice(0, 20);
       localStorage.setItem('sparzas_search_history', JSON.stringify(updated));
     }
   };
+
   const closeSidebar = () => setSidebarOpen(false);
+
+  // Se o contexto ainda está carregando, exibe um spinner global (opcional)
+  // Assim evitamos que páginas protegidas sejam renderizadas antes da confirmação do login
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-deep)' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">
       <nav className="navbar">
-        {isMobile && <button className="nav-icon-btn" onClick={() => { setSidebarOpen(!sidebarOpen); vibrate(); playClick(); }}><IconMenu /></button>}
-        <Link to="/" className="logo-link" onClick={vibrate}><Logo size={32} /><span className="logo-text">SPARZAS</span></Link>
+        {isMobile && (
+          <button
+            className="nav-icon-btn"
+            onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+              vibrate();
+              playClick();
+            }}
+          >
+            <IconMenu />
+          </button>
+        )}
+        <Link to="/" className="logo-link" onClick={vibrate}>
+          <Logo size={32} />
+          <span className="logo-text">SPARZAS</span>
+        </Link>
         {!isMobile && (
           <form className="search-form" onSubmit={handleSearch}>
-            <input type="text" placeholder="Pesquisar vídeos..." value={search} onChange={e => setSearch(e.target.value)} className="search-input" />
-            <button type="submit" className="search-btn"><IconSearch /></button>
+            <input
+              type="text"
+              placeholder="Pesquisar vídeos..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="search-input"
+            />
+            <button type="submit" className="search-btn">
+              <IconSearch />
+            </button>
           </form>
         )}
         <div className="nav-actions">
           {user ? (
             <>
-              <Link to="/notifications" className="nav-icon-btn" style={{ position:'relative' }}><IconNotifications size={22} /><span style={{ position:'absolute', top:2, right:2, width:8, height:8, background:'#ff453a', borderRadius:'50%' }} /></Link>
-              <Link to="/upload" className="upload-link" onClick={() => { vibrate(); playClick(); }}><IconUpload size={18} /> Publicar</Link>
+              <Link to="/notifications" className="nav-icon-btn" style={{ position: 'relative' }}>
+                <IconNotifications size={22} />
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 2,
+                    right: 2,
+                    width: 8,
+                    height: 8,
+                    background: '#ff453a',
+                    borderRadius: '50%',
+                  }}
+                />
+              </Link>
+              <Link
+                to="/upload"
+                className="upload-link"
+                onClick={() => {
+                  vibrate();
+                  playClick();
+                }}
+              >
+                <IconUpload size={18} /> Publicar
+              </Link>
             </>
           ) : (
-            <Link to="/login" className="login-btn" onClick={() => { vibrate(); playClick(); }}>Entrar</Link>
+            <Link
+              to="/login"
+              className="login-btn"
+              onClick={() => {
+                vibrate();
+                playClick();
+              }}
+            >
+              Entrar
+            </Link>
           )}
         </div>
       </nav>
@@ -118,8 +240,16 @@ function Layout() {
       <div className="main-wrapper">
         {!isMobile && <Sidebar open={sidebarOpen} close={closeSidebar} fixed={!isMobile} />}
         {isMobile && sidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
-        {isMobile && <div className={`sidebar-mobile ${sidebarOpen ? 'open' : ''}`}><Sidebar open={true} close={closeSidebar} fixed={false} /></div>}
-        <main className="main-content" style={{ paddingBottom: isMobile ? 80 : 28 }} onClick={() => sidebarOpen && closeSidebar()}>
+        {isMobile && (
+          <div className={`sidebar-mobile ${sidebarOpen ? 'open' : ''}`}>
+            <Sidebar open={true} close={closeSidebar} fixed={false} />
+          </div>
+        )}
+        <main
+          className="main-content"
+          style={{ paddingBottom: isMobile ? 80 : 28 }}
+          onClick={() => sidebarOpen && closeSidebar()}
+        >
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes location={location}>
