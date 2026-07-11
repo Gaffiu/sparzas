@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import axios from 'axios';
@@ -9,7 +9,7 @@ import { useToast } from '../contexts/ToastContext';
 const API = import.meta.env.VITE_API_URL;
 
 export default function Upload() {
-  const { user, loading } = useAuth(); // <- usa loading
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
@@ -22,7 +22,7 @@ export default function Upload() {
   const fileInputRef = useRef(null);
   const thumbInputRef = useRef(null);
 
-  // Aguarda o contexto terminar de verificar a sessão
+  // Enquanto verifica a sessão, mostra um spinner
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
@@ -31,10 +31,9 @@ export default function Upload() {
     );
   }
 
-  // Só redireciona se não estiver carregando e não houver usuário
+  // Se não estiver logado, redireciona para login
   if (!user) {
-    navigate('/login');
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const requestMedia = async () => {
@@ -82,27 +81,27 @@ export default function Upload() {
         thumbnail_url: thumbUrl
       });
 
-      addToast('Vídeo publicado com sucesso!', 'success');
+      addToast('Vídeo publicado!', 'success');
       navigate('/');
     } catch (err) {
-      addToast('Erro ao enviar: ' + (err.message || 'Falha'), 'error');
+      addToast('Erro: ' + (err.message || 'Falha'), 'error');
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h2 style={{ marginBottom: 20 }}>Publicar vídeo</h2>
-      <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div onClick={requestMedia} style={{ border:'2px dashed #333', borderRadius:12, padding:30, textAlign:'center', background:'#0f0f0f', cursor:'pointer' }}>
+    <div style={{ maxWidth: 640, margin: '0 auto' }}>
+      <h2 style={{ marginBottom: 24, fontWeight: 700 }}>Publicar vídeo</h2>
+      <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div onClick={requestMedia} style={{ border:'2px dashed #333', borderRadius:16, padding:32, textAlign:'center', background:'#0f0f0f', cursor:'pointer' }}>
           <input ref={fileInputRef} type="file" accept="video/*" capture="environment" onChange={handleFile} style={{ display:'none' }} />
           {file ? <p style={{ color:'#00e676' }}>Vídeo: {file.name} ({(file.size/(1024*1024)).toFixed(1)} MB)</p> : <p style={{ color:'#aaa' }}>Toque para selecionar um vídeo</p>}
         </div>
 
-        <div onClick={() => thumbInputRef.current?.click()} style={{ border:'1px dashed #444', borderRadius:12, padding:20, textAlign:'center', background:'#0f0f0f', cursor:'pointer' }}>
+        <div onClick={() => thumbInputRef.current?.click()} style={{ border:'1px dashed #444', borderRadius:16, padding:20, textAlign:'center', background:'#0f0f0f', cursor:'pointer' }}>
           <input ref={thumbInputRef} type="file" accept="image/*" onChange={handleThumb} style={{ display:'none' }} />
-          {thumbFile ? <p style={{ color:'#1de9b6' }}>Capa: {thumbFile.name}</p> : <p style={{ color:'#888', fontSize:'0.9rem' }}>Escolher thumbnail personalizada (opcional)</p>}
+          {thumbFile ? <p style={{ color:'#1de9b6' }}>Capa: {thumbFile.name}</p> : <p style={{ color:'#888', fontSize:'0.9rem' }}>Escolher thumbnail (opcional)</p>}
         </div>
 
         <input className="search-input" placeholder="Título do vídeo" value={title} onChange={e => setTitle(e.target.value)} required />
