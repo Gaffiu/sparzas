@@ -9,43 +9,44 @@ import { useToast } from '../contexts/ToastContext';
 const API = import.meta.env.VITE_API_URL;
 
 export default function Upload() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth(); // <- usa loading
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [file, setFile] = useState(null);
+  const [thumbFile, setThumbFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [permissionGranted, setPermissionGranted] = useState(false);
   const { playUpload } = useSound();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
+  const thumbInputRef = useRef(null);
 
-  if (!user) { navigate('/login'); return null; }
+  // Aguarda o contexto terminar de verificar a sessão
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
 
-  const requestMediaPermission = async () => {
+  // Só redireciona se não estiver carregando e não houver usuário
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  const requestMedia = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      stream.getTracks().forEach(track => track.stop());
-      setPermissionGranted(true);
-      fileInputRef.current?.click();
-    } catch (err) {
-      // Permissão negada, mas ainda permite selecionar arquivo
-      setPermissionGranted(false);
-      fileInputRef.current?.click();
-    }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(t => t.stop());
+    } catch {}
+    fileInputRef.current?.click();
   };
 
-  const handleFile = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (!selectedFile.type.startsWith('video/')) {
-        addToast('Selecione um arquivo de vídeo válido.', 'error');
-        return;
-      }
-      setFile(selectedFile);
-    }
-  };
+  const handleFile = (e) => { if (e.target.files[0]) setFile(e.target.files[0]); };
+  const handleThumb = (e) => { if (e.target.files[0]) setThumbFile(e.target.files[0]); };
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -54,31 +55,37 @@ export default function Upload() {
     playUpload();
     const fileName = `${user.id}/${Date.now()}_${file.name}`;
     try {
-      const { error } = await supabase.storage.from('videos').upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+      const { error } = await supabase.storage.from('videos').upload(fileName, file, { cacheControl: '3600' });
       if (error) throw error;
+
       let prog = 0;
-      const interval = setInterval(() => {
-        prog += 10;
-        if (prog >= 90) clearInterval(interval);
-        setProgress(prog);
-      }, 200);
+      const interval = setInterval(() => { prog += 10; if (prog >= 90) clearInterval(interval); setProgress(prog); }, 200);
       const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(fileName);
       clearInterval(interval);
       setProgress(100);
+
+      let thumbUrl = 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS';
+      if (thumbFile) {
+        const thumbName = `thumbnails/${user.id}/${Date.now()}_${thumbFile.name}`;
+        const { error: thumbErr } = await supabase.storage.from('videos').upload(thumbName, thumbFile, { upsert: false });
+        if (!thumbErr) {
+          const { data: { publicUrl: tUrl } } = supabase.storage.from('videos').getPublicUrl(thumbName);
+          thumbUrl = tUrl;
+        }
+      }
+
       await axios.post(`${API}/videos`, {
         user_id: user.id,
         title: title.trim(),
         description: desc.trim(),
         video_url: publicUrl,
-        thumbnail_url: 'https://via.placeholder.com/640x360/00e676/050505?text=SPARZAS'
+        thumbnail_url: thumbUrl
       });
-      addToast('Vídeo publicado!', 'success');
+
+      addToast('Vídeo publicado com sucesso!', 'success');
       navigate('/');
     } catch (err) {
-      addToast('Erro: ' + (err.message || 'Falha no upload'), 'error');
+      addToast('Erro ao enviar: ' + (err.message || 'Falha'), 'error');
     } finally {
       setUploading(false);
     }
@@ -88,60 +95,20 @@ export default function Upload() {
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
       <h2 style={{ marginBottom: 20 }}>Publicar vídeo</h2>
       <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div
-          onClick={requestMediaPermission}
-          style={{
-            border: '2px dashed #333', borderRadius: 12, padding: 30,
-            textAlign: 'center', background: '#0f0f0f', cursor: 'pointer',
-          }}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*"
-            capture="environment"
-            onChange={handleFile}
-            style={{ display: 'none' }}
-          />
-          {file ? (
-            <p style={{ color: '#00e676' }}>{file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)</p>
-          ) : (
-            <p style={{ color: '#aaa' }}>Toque para selecionar um vídeo (câmera ou galeria)</p>
-          )}
-          {!permissionGranted && file === null && (
-            <p style={{ fontSize: '0.8rem', color: '#888', marginTop: 8 }}>
-              Permitir acesso à câmera para gravar diretamente
-            </p>
-          )}
+        <div onClick={requestMedia} style={{ border:'2px dashed #333', borderRadius:12, padding:30, textAlign:'center', background:'#0f0f0f', cursor:'pointer' }}>
+          <input ref={fileInputRef} type="file" accept="video/*" capture="environment" onChange={handleFile} style={{ display:'none' }} />
+          {file ? <p style={{ color:'#00e676' }}>Vídeo: {file.name} ({(file.size/(1024*1024)).toFixed(1)} MB)</p> : <p style={{ color:'#aaa' }}>Toque para selecionar um vídeo</p>}
         </div>
-        <input
-          className="search-input"
-          placeholder="Título do vídeo"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          required
-        />
-        <textarea
-          className="search-input"
-          placeholder="Descrição"
-          value={desc}
-          onChange={e => setDesc(e.target.value)}
-          rows={3}
-          style={{ resize: 'vertical' }}
-        />
-        {uploading && (
-          <div style={{ background: '#1a1a1a', borderRadius: 6, height: 6, overflow: 'hidden' }}>
-            <div style={{ width: `${progress}%`, height: '100%', background: '#00e676', transition: 'width 0.3s' }} />
-          </div>
-        )}
-        <button
-          type="submit"
-          disabled={uploading || !file}
-          className="btn btn-primary"
-          style={{ alignSelf: 'flex-start' }}
-        >
-          {uploading ? 'Enviando...' : 'Publicar'}
-        </button>
+
+        <div onClick={() => thumbInputRef.current?.click()} style={{ border:'1px dashed #444', borderRadius:12, padding:20, textAlign:'center', background:'#0f0f0f', cursor:'pointer' }}>
+          <input ref={thumbInputRef} type="file" accept="image/*" onChange={handleThumb} style={{ display:'none' }} />
+          {thumbFile ? <p style={{ color:'#1de9b6' }}>Capa: {thumbFile.name}</p> : <p style={{ color:'#888', fontSize:'0.9rem' }}>Escolher thumbnail personalizada (opcional)</p>}
+        </div>
+
+        <input className="search-input" placeholder="Título do vídeo" value={title} onChange={e => setTitle(e.target.value)} required />
+        <textarea className="search-input" placeholder="Descrição" value={desc} onChange={e => setDesc(e.target.value)} rows={3} style={{ resize:'vertical' }} />
+        {uploading && <div style={{ height:4, background:'#333', borderRadius:2 }}><div style={{ width:`${progress}%`, height:'100%', background:'#00e676', transition:'width 0.3s' }} /></div>}
+        <button type="submit" disabled={uploading || !file} className="btn btn-primary" style={{ alignSelf:'flex-start' }}>{uploading ? 'Enviando...' : 'Publicar'}</button>
       </form>
     </div>
   );
