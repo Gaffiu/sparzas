@@ -6,27 +6,37 @@ export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // <- NOVO
+  const [loading, setLoading] = useState(true); // Indica que está verificando sessão
 
   useEffect(() => {
-    // Verifica sessão atual
+    // Verifica sessão ao montar
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
-      setLoading(false); // <- termina carregamento
+      setLoading(false);
     });
 
-    // Escuta mudanças de autenticação
+    // Escuta mudanças de estado (login/logout)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setLoading(false); // também garante fim do loading ao trocar
+      setLoading(false);
     });
 
     return () => listener?.unsubscribe();
   }, []);
 
-  const login = (email, password) => supabase.auth.signInWithPassword({ email, password });
-  const register = (email, password) => supabase.auth.signUp({ email, password });
-  const logout = () => supabase.auth.signOut();
+  const login = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  };
+
+  const register = async (email, password) => {
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
