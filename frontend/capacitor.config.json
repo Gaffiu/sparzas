@@ -1,0 +1,9 @@
+{
+  "appId": "com.sparzas.play",
+  "appName": "SPARZAS PLAY",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
